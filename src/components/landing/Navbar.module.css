@@ -1,0 +1,56 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.92);
+  border-bottom: 1px solid #d0e6d8;
+}
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.brand {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+}
+.stock { color: #1a7a4a; }
+.easy { color: #0f1a14; }
+.links {
+  display: flex;
+  gap: 24px;
+}
+.links a {
+  color: #5a7566;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+.links a:hover {
+  color: #1a7a4a;
+}
+.loginButton {
+  background: #1a7a4a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 22px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.loginButton:hover {
+  background: #22a860;
+  transform: translateY(-1px);
+}
+@media (max-width: 768px) {
+  .links { display: none; }
+}

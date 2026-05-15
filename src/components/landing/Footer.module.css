@@ -1,0 +1,9 @@
+.footer { background: #080f0b; color: rgba(255,255,255,0.7); padding: 32px 5%; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.brand { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; }
+.stock { color: #22a860; }
+.easy { color: rgba(255,255,255,0.7); margin-left: 6px; }
+.copy { font-size: 13px; color: rgba(255,255,255,0.3); }
+.links { display: flex; gap: 18px; flex-wrap: wrap; }
+.links a { color: rgba(255,255,255,0.4); font-size: 13px; transition: color 0.2s ease; }
+.links a:hover { color: #22a860; }
+@media (max-width: 640px) { .footer { flex-direction: column; align-items: flex-start; } }
