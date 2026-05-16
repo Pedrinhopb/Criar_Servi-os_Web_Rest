@@ -1,0 +1,121 @@
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 68px;
+  height: calc(100vh - 68px);
+  background: #fff;
+  border-right: 1px solid #d0e6d8;
+  overflow-y: auto;
+  z-index: 999;
+  width: 220px;
+  transition: width 0.2s ease, transform 0.2s ease;
+}
+.collapsed {
+  width: 64px;
+}
+.collapseBtn {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #d0e6d8;
+  padding: 10px 14px;
+  cursor: pointer;
+  color: #5a7566;
+  text-align: right;
+  font-size: 14px;
+}
+.collapseBtn:hover {
+  color: #1a7a4a;
+  background: #f5faf7;
+}
+.menu {
+  padding-top: 10px;
+}
+.section {
+  margin-bottom: 16px;
+}
+.sectionTitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #64748b;
+  padding: 0 20px;
+  margin-bottom: 6px;
+}
+.link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+  border-right: 3px solid transparent;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.active {
+  background: #e6f5ee;
+  color: #1a7a4a;
+  border-right-color: #1a7a4a;
+  font-weight: 600;
+}
+.link:hover {
+  background: #f5faf7;
+  color: #1a7a4a;
+}
+.logout {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+  margin-top: auto;
+  border-top: 1px solid #d0e6d8;
+}
+.logout:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+.overlay {
+  display: none;
+}
+.overlayVisible {
+  display: none;
+}
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .overlayVisible {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 998;
+  }
+  .sidebar.expanded {
+    transform: translateX(0);
+  }
+  .collapseBtn {
+    display: none;
+  }
+}
+@media (max-width: 768px) {
+  .link { padding: 10px 14px; }
+  .sectionTitle { padding: 0 14px; }
+}

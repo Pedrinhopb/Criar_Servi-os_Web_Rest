@@ -1,0 +1,86 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #0a0f0c;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.decorCircleTop {
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(34,168,96,0.12), transparent 50%);
+  top: -80px;
+  left: -120px;
+  pointer-events: none;
+}
+.decorCircleBottom {
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(34,168,96,0.08), transparent 50%);
+  bottom: -80px;
+  right: -120px;
+  pointer-events: none;
+}
+.card {
+  width: 420px;
+  max-width: 90vw;
+  padding: 40px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+}
+.brand {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.brandStrong {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+}
+.brandStock { color: #22a860; }
+.brandEasy { color: rgba(255,255,255,0.7); margin-left:6px }
+.subtitle { color: rgba(255,255,255,0.45); margin-bottom: 24px; text-align:center }
+.field { margin-bottom: 14px; position: relative }
+.label { display:block; margin-bottom:6px; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.6px; color: rgba(255,255,255,0.5) }
+.input {
+  width:100%;
+  padding:12px 14px;
+  border-radius:10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  font-size:14px;
+  outline:none;
+}
+.input:focus{ box-shadow: 0 0 0 3px rgba(26,122,74,0.12); border-color: #1a7a4a }
+.eyeBtn {
+  position:absolute; right:10px; top:38px; background:none; border:none; color:rgba(255,255,255,0.6); cursor:pointer; font-size:16px;padding:6px;border-radius:6px
+}
+.forgot { text-align:right; margin-top:6px; font-size:12px }
+.error { background: rgba(231,76,60,0.12); color: #fff; padding:8px; border-radius:8px; margin-bottom:12px }
+.btnPrimary { width:100%; padding:13px; background: #1a7a4a; color:#fff; border-radius:10px; border:none; cursor:pointer; font-weight:500 }
+.btnPrimary:hover{ background: #22a860 }
+.footerText { margin-top:12px; text-align:center; font-size:14px }
+.link { color: #22a860 }
+.disabled { opacity:0.7; cursor:not-allowed }
+
+/* Register extras */
+.strength { display:flex; gap:6px; align-items:center; margin-top:8px }
+.strengthBar { height:6px; flex:1; display:flex; gap:4px }
+.seg { flex:1; background: rgba(255,255,255,0.08); border-radius:3px }
+.seg.on.red { background: rgba(231,76,60,0.9) }
+.seg.on.amber { background: #f59e0b }
+.seg.on.green { background: #22a860 }
+.seg.on.greenDark { background: #1a7a4a }
+.strengthLabel { font-size:13px; color: rgba(255,255,255,0.65); min-width:80px; text-align:right }
