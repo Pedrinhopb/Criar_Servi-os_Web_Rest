@@ -1,31 +1,46 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './Navbar.module.css'
 
 const links = [
-  { label: 'Serviços', href: '#servicos' },
-  { label: 'Avaliações', href: '#avaliacoes' },
-  { label: 'FAQ', href: '#faq' },
-  { label: 'Contato', href: '#contato' },
+  { label: 'Serviços',   href: '#servicos'   },
+  { label: 'Avaliações', href: '#avaliacoes'  },
+  { label: 'FAQ',        href: '#faq'         },
+  { label: 'Contato',    href: '#contato'     },
 ]
 
 export default function Navbar() {
   const navigate = useNavigate()
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
-    <header className={styles.navbar}>
+    <header className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
       <div className={styles.inner}>
         <div className={styles.brand}>
           <span className={styles.stock}>Stock</span>
           <span className={styles.easy}>Easy</span>
         </div>
+
         <nav className={styles.links}>
           {links.map(link => (
             <a key={link.label} href={link.href}>{link.label}</a>
           ))}
         </nav>
-        <button className={styles.loginButton} onClick={() => navigate('/login')}>
-          Entrar
-        </button>
+
+        <div className={styles.actions}>
+          <button className={styles.registerButton} onClick={() => navigate('/register')}>
+            Criar conta
+          </button>
+          <button className={styles.loginButton} onClick={() => navigate('/login')}>
+            Entrar →
+          </button>
+        </div>
       </div>
     </header>
   )
