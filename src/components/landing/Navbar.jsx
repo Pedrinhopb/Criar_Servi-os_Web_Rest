@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTheme } from '../../context/ThemeContext'
 import styles from './Navbar.module.css'
 
 const links = [
-  { label: 'Serviços',   href: '#servicos'   },
-  { label: 'Avaliações', href: '#avaliacoes'  },
-  { label: 'FAQ',        href: '#faq'         },
-  { label: 'Contato',    href: '#contato'     },
+  { label: 'Serviços',   href: '#servicos'  },
+  { label: 'Avaliações', href: '#avaliacoes' },
+  { label: 'FAQ',        href: '#faq'        },
+  { label: 'Contato',    href: '#contato'    },
 ]
 
 export default function Navbar() {
   const navigate = useNavigate()
+  const { theme, toggleTheme } = useTheme()
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -18,6 +20,8 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  const isDark = theme === 'dark'
 
   return (
     <header className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
@@ -34,12 +38,12 @@ export default function Navbar() {
         </nav>
 
         <div className={styles.actions}>
-          <button className={styles.registerButton} onClick={() => navigate('/register')}>
-            Criar conta
+          <button className={styles.themeBtn} onClick={toggleTheme} title={isDark ? 'Tema claro' : 'Tema escuro'}>
+            <span className={styles.themeBtnIcon}>{isDark ? '☀️' : '🌙'}</span>
+            <span className={styles.themeBtnLabel}>{isDark ? 'Claro' : 'Escuro'}</span>
           </button>
-          <button className={styles.loginButton} onClick={() => navigate('/login')}>
-            Entrar →
-          </button>
+          <button className={styles.registerButton} onClick={() => navigate('/register')}>Criar conta</button>
+          <button className={styles.loginButton} onClick={() => navigate('/login')}>Entrar →</button>
         </div>
       </div>
     </header>
