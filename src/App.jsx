@@ -1,24 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import LandingPage from './pages/LandingPage'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import Cadastro from './pages/Cadastro'
+import LandingPage    from './pages/LandingPage'
+import LoginPage      from './pages/LoginPage'
+import RegisterPage   from './pages/RegisterPage'
+import Cadastro       from './pages/Cadastro'
 import WorkInProgress from './pages/WorkInProgress'
 
 export default function App() {
-  const [user, setUser] = useState(null)
-  const [sidebarAberta, setSidebarAberta] = useState(true)
+  const [user,          setUser]          = useState(null)
+  const [sidebarAberta, setSidebarAberta] = useState(false)
 
   useEffect(() => {
     const raw = localStorage.getItem('stockeasy_user')
-    if (raw) {
-      try {
-        setUser(JSON.parse(raw))
-      } catch (e) {
-        setUser(null)
-      }
-    }
+    if (raw) { try { setUser(JSON.parse(raw)) } catch { setUser(null) } }
   }, [])
 
   function handleLogin(userObj) {
@@ -31,67 +25,27 @@ export default function App() {
     setUser(null)
   }
 
-  function onToggleSidebar() {
-    setSidebarAberta(v => !v)
-  }
-
-  function onFecharSidebar() {
-    setSidebarAberta(false)
+  const sharedProps = {
+    user,
+    onLogout:         handleLogout,
+    sidebarAberta,
+    onToggleSidebar:  () => setSidebarAberta(v => !v),
+    onFecharSidebar:  () => setSidebarAberta(false),
   }
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/"        element={<LandingPage />} />
+      <Route path="/login"   element={user ? <Navigate to="/cadastro" replace /> : <LoginPage    onLogin={handleLogin}    />} />
+      <Route path="/register"element={user ? <Navigate to="/cadastro" replace /> : <RegisterPage onRegister={handleLogin} />} />
 
-      <Route
-        path="/login"
-        element={user ? <Navigate to="/cadastro" replace /> : <LoginPage onLogin={handleLogin} />}
-      />
-
-      <Route
-        path="/register"
-        element={user ? <Navigate to="/cadastro" replace /> : <RegisterPage onRegister={handleLogin} />}
-      />
-
-      <Route
-        path="/dashboard"
-        element={user ? <WorkInProgress title="Dashboard" /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/relatorios"
-        element={user ? <WorkInProgress title="Relatórios" /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/administrativo"
-        element={user ? <WorkInProgress title="Administrativo" /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/estoque"
-        element={user ? <WorkInProgress title="Estoque" /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/financeiro"
-        element={user ? <WorkInProgress title="Financeiro" /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/ajuda"
-        element={user ? <WorkInProgress title="Ajuda" /> : <Navigate to="/login" replace />}
-      />
-
-      <Route
-        path="/cadastro/*"
-        element={user ? (
-          <Cadastro
-            user={user}
-            onLogout={handleLogout}
-            sidebarAberta={sidebarAberta}
-            onToggleSidebar={onToggleSidebar}
-            onFecharSidebar={onFecharSidebar}
-          />
-        ) : (
-          <Navigate to="/login" replace />
-        )}
-      />
+      <Route path="/cadastro/*"    element={user ? <Cadastro       {...sharedProps} /> : <Navigate to="/login" replace />} />
+      <Route path="/dashboard"     element={user ? <WorkInProgress {...sharedProps} title="Dashboard"      /> : <Navigate to="/login" replace />} />
+      <Route path="/relatorios"    element={user ? <WorkInProgress {...sharedProps} title="Relatórios"     /> : <Navigate to="/login" replace />} />
+      <Route path="/administrativo"element={user ? <WorkInProgress {...sharedProps} title="Administrativo" /> : <Navigate to="/login" replace />} />
+      <Route path="/estoque"       element={user ? <WorkInProgress {...sharedProps} title="Estoque"        /> : <Navigate to="/login" replace />} />
+      <Route path="/financeiro"    element={user ? <WorkInProgress {...sharedProps} title="Financeiro"     /> : <Navigate to="/login" replace />} />
+      <Route path="/ajuda"         element={user ? <WorkInProgress {...sharedProps} title="Ajuda"          /> : <Navigate to="/login" replace />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
