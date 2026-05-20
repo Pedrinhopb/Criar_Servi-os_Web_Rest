@@ -14,7 +14,7 @@
 | Nome | 
 |------|
 | Pedro Paulo de Vasconcelos |
-| Maria Eduarda Eloy | 
+| Maria Eduarda Bandeira Eloy | 
 
 ---
 
