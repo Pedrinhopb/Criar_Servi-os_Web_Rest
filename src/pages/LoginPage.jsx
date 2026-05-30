@@ -2,55 +2,136 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import styles from '../styles/Auth.module.css'
 
-export default function LoginPage({ onLogin }){
-  const [email,setEmail] = useState('')
-  const [senha,setSenha] = useState('')
-  const [erro,setErro] = useState('')
-  const navigate = useNavigate()
+const BASE_URL = 'http://localhost:3000/api'
 
-  function submit(e){
-    e.preventDefault()
+export default function LoginPage({ onLogin }) {
+  const navigate = useNavigate()
+  const [form,    setForm]    = useState({ email: '', senha: '' })
+  const [erro,    setErro]    = useState('')
+  const [loading, setLoading] = useState(false)
+  const [showPwd, setShowPwd] = useState(false)
+
+  function handleChange(e) {
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
     setErro('')
-    if(!email || !senha){
-      setErro('Preencha todos os campos')
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!form.email || !form.senha) {
+      setErro('Preencha e-mail e senha.')
       return
     }
-    if(email === 'admin@hotmail.com' && senha === 'admin'){
-      const user = { name: 'Administrador', email }
-      onLogin && onLogin(user)
-      navigate('/cadastro')
-    } else {
-      setErro('E-mail ou senha incorretos')
+
+    setLoading(true)
+    setErro('')
+
+    try {
+      // Tenta autenticar via API
+      const res = await fetch(`${BASE_URL}/usuarios`)
+      const usuarios = await res.json()
+
+      const usuario = usuarios.find(u =>
+        u.email === form.email && u.status === 'Ativo'
+      )
+
+      if (usuario) {
+        onLogin({
+          name:  usuario.nome,
+          email: usuario.email,
+          role:  usuario.permissao,
+          id:    usuario._id,
+        })
+        navigate('/cadastro')
+        return
+      }
+
+      // fallback — usuário padrão de teste
+      if (form.email === 'admin@hotmail.com' && form.senha === 'admin') {
+        onLogin({ name: 'Admin', email: form.email, role: 'Administrador' })
+        navigate('/cadastro')
+        return
+      }
+
+      setErro('E-mail ou senha incorretos.')
+    } catch {
+      // backend offline — usa credencial de teste
+      if (form.email === 'admin@hotmail.com' && form.senha === 'admin') {
+        onLogin({ name: 'Admin', email: form.email, role: 'Administrador' })
+        navigate('/cadastro')
+      } else {
+        setErro('Servidor offline. Use admin@hotmail.com / admin para testar.')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
     <div className={styles.page}>
-      <div className={styles.decorCircleTop}></div>
-      <div className={styles.decorCircleBottom}></div>
-      <form onSubmit={submit} className={styles.card}>
+      <div className={styles.decorCircleTop}/>
+      <div className={styles.decorCircleBottom}/>
+
+      <div className={styles.card}>
         <div className={styles.brand}>
-          <div className={styles.brandStrong}><span className={styles.brandStock}>Stock</span><span className={styles.brandEasy}>Easy</span></div>
+          <strong className={styles.brandStrong}>
+            <span className={styles.brandStock}>Stock</span>
+            <span className={styles.brandEasy}>Easy</span>
+          </strong>
         </div>
-        <p className={styles.subtitle}>Entre na sua conta para continuar</p>
+
+        <h1 className={styles.title}>Entrar na conta</h1>
+        <p className={styles.subtitle}>Acesse o painel de controle</p>
+
         {erro && <div className={styles.error}>{erro}</div>}
 
-        <div className={styles.field}>
-          <label className={styles.label}>E-mail</label>
-          <input className={styles.input} value={email} onChange={e=>setEmail(e.target.value)} type="email" />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className={styles.field}>
+            <label className={styles.label}>E-mail</label>
+            <input
+              className={styles.input}
+              type="email"
+              name="email"
+              placeholder="seu@email.com"
+              value={form.email}
+              onChange={handleChange}
+              autoFocus
+            />
+          </div>
 
-        <div className={styles.field}>
-          <label className={styles.label}>Senha</label>
-          <input className={styles.input} value={senha} onChange={e=>setSenha(e.target.value)} type="password" />
-        </div>
+          <div className={styles.field}>
+            <label className={styles.label}>Senha</label>
+            <input
+              className={styles.input}
+              type={showPwd ? 'text' : 'password'}
+              name="senha"
+              placeholder="••••••••"
+              value={form.senha}
+              onChange={handleChange}
+            />
+            <button type="button" className={styles.eyeBtn} onClick={() => setShowPwd(v => !v)}>
+              {showPwd ? '🙈' : '👁️'}
+            </button>
+            <div className={styles.forgot}>
+              <a href="#">Esqueceu a senha?</a>
+            </div>
+          </div>
 
-        <div className={styles.forgot}><Link to="/forgot" style={{color:'#22a860'}}>Esqueci minha senha</Link></div>
+          <button
+            type="submit"
+            className={`${styles.btnPrimary} ${loading ? styles.disabled : ''}`}
+            disabled={loading}
+          >
+            {loading ? 'Entrando...' : 'Entrar →'}
+          </button>
+        </form>
 
-        <button type="submit" className={styles.btnPrimary}>Entrar</button>
-
-        <div className={styles.footerText}>Não tem uma conta? <Link to="/register" className={styles.link}>Criar conta agora</Link></div>
-      </form>
+        <p className={styles.footerText}>
+          Não tem conta?
+          <Link to="/register" className={styles.link}>Criar conta grátis</Link>
+        </p>
+      </div>
     </div>
   )
 }

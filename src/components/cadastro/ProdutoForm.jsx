@@ -2,25 +2,25 @@ import React, { useMemo, useState } from 'react'
 import styles from '../../styles/Cadastro.module.css'
 
 const categorias = ['Suplementos','Eletrônicos','Papelaria','Calçados','Acessórios','Outros']
-const unidades = ['un','kg','g','L','ml','cx','par','m']
+const unidades   = ['un','kg','g','L','ml','cx','par','m']
 
 export default function ProdutoForm({ fornecedores, onSave, onCancel }) {
-  const [nome, setNome] = useState('')
-  const [codigo, setCodigo] = useState('')
-  const [categoria, setCategoria] = useState(categorias[0])
-  const [unidade, setUnidade] = useState(unidades[0])
-  const [fornecedor, setFornecedor] = useState(fornecedores[0]?.nome || '')
-  const [custo, setCusto] = useState('')
-  const [margem, setMargem] = useState('')
-  const [estoque, setEstoque] = useState('')
+  const [nome,          setNome]          = useState('')
+  const [codigo,        setCodigo]        = useState('')
+  const [categoria,     setCategoria]     = useState(categorias[0])
+  const [unidade,       setUnidade]       = useState(unidades[0])
+  const [fornecedor,    setFornecedor]    = useState(fornecedores[0]?.nome || '')
+  const [custo,         setCusto]         = useState('')
+  const [margem,        setMargem]        = useState('')
+  const [estoque,       setEstoque]       = useState('')
   const [estoqueMinimo, setEstoqueMinimo] = useState('')
-  const [erro, setErro] = useState('')
+  const [erro,          setErro]          = useState('')
 
   const precoVenda = useMemo(() => {
-    const custoNum = Number(custo.replace(',', '.'))
-    const margemNum = Number(margem)
-    if (!custoNum || !margemNum || margemNum >= 100) return 0
-    return custoNum / (1 - margemNum / 100)
+    const c = Number(custo.replace(',', '.'))
+    const m = Number(margem)
+    if (!c || !m || m >= 100) return 0
+    return c / (1 - m / 100)
   }, [custo, margem])
 
   function handleSave(e) {
@@ -34,16 +34,16 @@ export default function ProdutoForm({ fornecedores, onSave, onCancel }) {
       setErro('Margem deve ser menor que 100%')
       return
     }
+    // sem id — o MongoDB gera automaticamente
     onSave({
-      id: Date.now(),
       nome,
-      codigo,
+      codigoBarras: codigo,   // ← campo correto do model
       categoria,
       fornecedor,
-      custo: Number(custo.replace(',', '.')),
-      margem: Number(margem),
-      venda: precoVenda,
-      estoque: Number(estoque) || 0,
+      custo:         Number(custo.replace(',', '.')),
+      margem:        Number(margem),
+      venda:         parseFloat(precoVenda.toFixed(2)),
+      estoque:       Number(estoque)       || 0,
       estoqueMinimo: Number(estoqueMinimo) || 0,
       unidade,
     })
@@ -54,11 +54,11 @@ export default function ProdutoForm({ fornecedores, onSave, onCancel }) {
       <div className={styles.formGrid2}>
         <div>
           <label className={styles.fieldLabel}>Nome do produto</label>
-          <input className={styles.fieldInput} value={nome} onChange={e => setNome(e.target.value)} />
+          <input className={styles.fieldInput} value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Whey Protein 1kg" />
         </div>
         <div>
           <label className={styles.fieldLabel}>Código de barras</label>
-          <input className={styles.fieldInput} value={codigo} onChange={e => setCodigo(e.target.value)} />
+          <input className={styles.fieldInput} value={codigo} onChange={e => setCodigo(e.target.value)} placeholder="Ex: 7891234560001" />
         </div>
       </div>
       <div className={styles.formGrid2}>
@@ -76,10 +76,13 @@ export default function ProdutoForm({ fornecedores, onSave, onCancel }) {
         </div>
       </div>
       <div className={styles.formGrid1}>
-        <label className={styles.fieldLabel}>Fornecedor vinculado</label>
-        <select className={styles.fieldInput} value={fornecedor} onChange={e => setFornecedor(e.target.value)}>
-          {fornecedores.map(item => <option key={item.nome} value={item.nome}>{item.nome}</option>)}
-        </select>
+        <div>
+          <label className={styles.fieldLabel}>Fornecedor vinculado</label>
+          <select className={styles.fieldInput} value={fornecedor} onChange={e => setFornecedor(e.target.value)}>
+            <option value="">Selecione um fornecedor</option>
+            {fornecedores.map(item => <option key={item._id || item.nome} value={item.nome}>{item.nome}</option>)}
+          </select>
+        </div>
       </div>
       <div className={styles.formGrid3}>
         <div>
@@ -92,23 +95,21 @@ export default function ProdutoForm({ fornecedores, onSave, onCancel }) {
         </div>
         <div>
           <label className={styles.fieldLabel}>Preço de venda</label>
-          <input className={styles.fieldInput} value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(precoVenda || 0)} readOnly />
+          <input className={styles.fieldInput} readOnly value={new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(precoVenda || 0)} />
         </div>
       </div>
       <div className={styles.formGrid2}>
         <div>
           <label className={styles.fieldLabel}>Estoque atual</label>
-          <input className={styles.fieldInput} value={estoque} onChange={e => setEstoque(e.target.value)} type="number" min="0" />
+          <input className={styles.fieldInput} type="number" min="0" value={estoque} onChange={e => setEstoque(e.target.value)} />
         </div>
         <div>
           <label className={styles.fieldLabel}>Estoque mínimo ideal</label>
-          <input className={styles.fieldInput} value={estoqueMinimo} onChange={e => setEstoqueMinimo(e.target.value)} type="number" min="0" />
+          <input className={styles.fieldInput} type="number" min="0" value={estoqueMinimo} onChange={e => setEstoqueMinimo(e.target.value)} />
         </div>
       </div>
       <div className={styles.formGrid1}>
-        <div className={styles.uploadPlaceholder}>
-          📷 Upload de foto disponível em breve
-        </div>
+        <div className={styles.uploadPlaceholder}>📷 Upload de foto disponível em breve</div>
       </div>
       {erro && <div className={styles.errorMessage}>{erro}</div>}
       <div className={styles.modalFooter}>
