@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import styles from '../styles/Auth.module.css'
 
 const BASE_URL = 'http://localhost:3000/api'
@@ -28,21 +28,13 @@ export default function LoginPage({ onLogin }) {
     setErro('')
 
     try {
-      // Tenta autenticar via API
-      const res = await fetch(`${BASE_URL}/usuarios`)
+      const res      = await fetch(`${BASE_URL}/usuarios`)
       const usuarios = await res.json()
 
-      const usuario = usuarios.find(u =>
-        u.email === form.email && u.status === 'Ativo'
-      )
+      const usuario = usuarios.find(u => u.email === form.email && u.status === 'Ativo')
 
       if (usuario) {
-        onLogin({
-          name:  usuario.nome,
-          email: usuario.email,
-          role:  usuario.permissao,
-          id:    usuario._id,
-        })
+        onLogin({ name: usuario.nome, email: usuario.email, role: usuario.permissao, id: usuario._id })
         navigate('/cadastro')
         return
       }
@@ -127,10 +119,7 @@ export default function LoginPage({ onLogin }) {
           </button>
         </form>
 
-        <p className={styles.footerText}>
-          Não tem conta?
-          <Link to="/register" className={styles.link}>Criar conta grátis</Link>
-        </p>
+        {/* removido link de criar conta — cadastro só pelo admin */}
       </div>
     </div>
   )

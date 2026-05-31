@@ -24,7 +24,6 @@ const SEARCH_PH = {
 }
 
 const SINGULAR = { produtos:'produto', fornecedores:'fornecedor', clientes:'cliente', usuarios:'usuário' }
-
 const fmt = v => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v)
 
 /* ── Modal ── */
@@ -78,8 +77,8 @@ function ConfirmDialog({ msg, onConfirm, onCancel }) {
 /* ── Loading ── */
 function Loading() {
   return (
-    <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-      <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+    <div style={{ padding:'40px', textAlign:'center', color:'var(--text-muted)' }}>
+      <div style={{ fontSize:32, marginBottom:12 }}>⏳</div>
       <p>Carregando dados...</p>
     </div>
   )
@@ -88,8 +87,10 @@ function Loading() {
 export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSidebar, onFecharSidebar }) {
   const [activeTab,  setActiveTab]  = useState('produtos')
   const [modalOpen,  setModalOpen]  = useState(false)
+  const [modalMode,  setModalMode]  = useState('criar')
+  const [editItem,   setEditItem]   = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [toast,      setToast]      = useState({ msg: '', tipo: 'sucesso' })
+  const [toast,      setToast]      = useState({ msg:'', tipo:'sucesso' })
   const [confirmMsg, setConfirmMsg] = useState('')
   const [pendingDel, setPendingDel] = useState(null)
   const [loading,    setLoading]    = useState(false)
@@ -100,28 +101,25 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
   const [clientes,     setClientes]     = useState([])
   const [usuarios,     setUsuarios]     = useState([])
 
-  const apis = {
-    produtos:     produtosAPI,
-    fornecedores: fornecedoresAPI,
-    clientes:     clientesAPI,
-    usuarios:     usuariosAPI,
-  }
+  const apis    = { produtos: produtosAPI, fornecedores: fornecedoresAPI, clientes: clientesAPI, usuarios: usuariosAPI }
+  const setters = { produtos: setProdutos, fornecedores: setFornecedores, clientes: setClientes, usuarios: setUsuarios }
 
-  const setters = {
-    produtos:     setProdutos,
-    fornecedores: setFornecedores,
-    clientes:     setClientes,
-    usuarios:     setUsuarios,
-  }
-
-  // Carregar dados da aba ativa
-  async function carregarDados(tab = activeTab) {
+  // ── Carrega TODAS as abas de uma vez ao iniciar ──
+  async function carregarTudo() {
     setLoading(true)
     try {
-      const dados = await apis[tab].listar()
-      setters[tab](dados)
+      const [p, f, c, u] = await Promise.all([
+        produtosAPI.listar(),
+        fornecedoresAPI.listar(),
+        clientesAPI.listar(),
+        usuariosAPI.listar(),
+      ])
+      setProdutos(p)
+      setFornecedores(f)
+      setClientes(c)
+      setUsuarios(u)
       setBackendOk(true)
-    } catch (err) {
+    } catch {
       setBackendOk(false)
       showToast('Backend offline — verifique se o servidor está rodando', 'erro')
     } finally {
@@ -129,45 +127,58 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
     }
   }
 
-  useEffect(() => { carregarDados(activeTab) }, [activeTab])
-
-  function showToast(msg, tipo = 'sucesso') {
-    setToast({ msg, tipo })
+  // ── Recarrega só a aba ativa após criar/editar/excluir ──
+  async function carregarAba(tab = activeTab) {
+    try {
+      const dados = await apis[tab].listar()
+      setters[tab](dados)
+    } catch {
+      showToast('Erro ao atualizar dados', 'erro')
+    }
   }
 
-  // Filtros
+  // Carrega tudo quando a página abre
+  useEffect(() => { carregarTudo() }, [])
+
+  function showToast(msg, tipo = 'sucesso') { setToast({ msg, tipo }) }
+
+  /* filtros */
   const fP = useMemo(() => produtos.filter(p     => [p.nome, p.codigoBarras, p.categoria, p.fornecedor].some(v => v?.toLowerCase().includes(searchTerm.toLowerCase()))), [produtos, searchTerm])
   const fF = useMemo(() => fornecedores.filter(f => [f.nome, f.cnpj, f.email].some(v => v?.toLowerCase().includes(searchTerm.toLowerCase()))),                            [fornecedores, searchTerm])
   const fC = useMemo(() => clientes.filter(c     => [c.nome, c.documento, c.email, c.telefone].some(v => v?.toLowerCase().includes(searchTerm.toLowerCase()))),            [clientes, searchTerm])
   const fU = useMemo(() => usuarios.filter(u     => [u.nome, u.email, u.cargo].some(v => v?.toLowerCase().includes(searchTerm.toLowerCase()))),                            [usuarios, searchTerm])
 
-  const counts       = { produtos: produtos.length, fornecedores: fornecedores.length, clientes: clientes.length, usuarios: usuarios.length }
-  const currentItems = { produtos: fP, fornecedores: fF, clientes: fC, usuarios: fU }[activeTab]
+  const counts       = { produtos:produtos.length, fornecedores:fornecedores.length, clientes:clientes.length, usuarios:usuarios.length }
+  const currentItems = { produtos:fP, fornecedores:fF, clientes:fC, usuarios:fU }[activeTab]
 
-  // Salvar
-  async function handleSave(type, dados) {
+  function abrirCriar() { setModalMode('criar'); setEditItem(null); setModalOpen(true) }
+  function abrirEditar(item) { setModalMode('editar'); setEditItem(item); setModalOpen(true) }
+  function fecharModal() { setModalOpen(false); setEditItem(null) }
+
+  async function handleSave(dados) {
     try {
-      await apis[activeTab].criar(dados)
-      setModalOpen(false)
-      showToast(`${SINGULAR[activeTab].charAt(0).toUpperCase() + SINGULAR[activeTab].slice(1)} cadastrado com sucesso!`)
-      carregarDados()
+      if (modalMode === 'editar' && editItem) {
+        await apis[activeTab].atualizar(editItem._id, dados)
+        showToast(`${SINGULAR[activeTab].charAt(0).toUpperCase() + SINGULAR[activeTab].slice(1)} atualizado com sucesso!`)
+      } else {
+        await apis[activeTab].criar(dados)
+        showToast(`${SINGULAR[activeTab].charAt(0).toUpperCase() + SINGULAR[activeTab].slice(1)} cadastrado com sucesso!`)
+      }
+      fecharModal()
+      carregarAba() // recarrega só a aba atual
     } catch (err) {
       showToast(err.message || 'Erro ao salvar', 'erro')
     }
   }
 
-  // Excluir
-  function askDelete(id, nome) {
-    setPendingDel(id)
-    setConfirmMsg(`Deseja excluir "${nome}"? Esta ação não pode ser desfeita.`)
-  }
+  function askDelete(id, nome) { setPendingDel(id); setConfirmMsg(`Deseja excluir "${nome}"? Esta ação não pode ser desfeita.`) }
 
   async function confirmDelete() {
     try {
       await apis[activeTab].remover(pendingDel)
       setPendingDel(null); setConfirmMsg('')
       showToast('Item excluído com sucesso.')
-      carregarDados()
+      carregarAba()
     } catch (err) {
       showToast(err.message || 'Erro ao excluir', 'erro')
     }
@@ -182,6 +193,10 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
     { key:'usuarios',     icon:'🔐', label:'Usuários',     value:usuarios.length,     alert:usuarios.filter(u=>u.status==='Inativo').length, alertLabel:'inativos' },
   ]
 
+  const modalTitle = modalMode === 'editar'
+    ? `Editar ${SINGULAR[activeTab].charAt(0).toUpperCase() + SINGULAR[activeTab].slice(1)}`
+    : `Novo ${SINGULAR[activeTab].charAt(0).toUpperCase() + SINGULAR[activeTab].slice(1)}`
+
   return (
     <div className={styles.page}>
       <Header user={user} onLogout={onLogout} onToggleSidebar={onToggleSidebar} />
@@ -189,7 +204,6 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
 
       <main className={styles.main}>
 
-        {/* aviso de backend offline */}
         {!backendOk && (
           <div style={{ background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.3)', borderRadius:10, padding:'12px 16px', marginBottom:16, fontSize:14, color:'#e74c3c', display:'flex', alignItems:'center', gap:10 }}>
             ⚠️ Backend offline — rode <code style={{background:'rgba(0,0,0,0.1)',padding:'2px 6px',borderRadius:4}}>npm run dev</code> na pasta <code style={{background:'rgba(0,0,0,0.1)',padding:'2px 6px',borderRadius:4}}>stockEasy-backend</code>
@@ -232,9 +246,7 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
             <input className={styles.searchInput} placeholder={SEARCH_PH[activeTab]} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             {searchTerm && <button className={styles.searchClear} onClick={() => setSearchTerm('')}>×</button>}
           </div>
-          <button className={styles.btnNew} onClick={() => setModalOpen(true)}>
-            + Novo {SINGULAR[activeTab]}
-          </button>
+          <button className={styles.btnNew} onClick={abrirCriar}>+ Novo {SINGULAR[activeTab]}</button>
         </div>
 
         {/* tabela */}
@@ -245,7 +257,7 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
               titulo={`Nenhum ${SINGULAR[activeTab]} encontrado`}
               descricao={searchTerm ? 'Tente buscar por outro termo.' : `Cadastre seu primeiro ${SINGULAR[activeTab]}.`}
               labelBotao={searchTerm ? null : `+ Novo ${SINGULAR[activeTab]}`}
-              onBotao={() => setModalOpen(true)}
+              onBotao={abrirCriar}
             />
           ) : (
             <table className={styles.table}>
@@ -270,7 +282,7 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
                       <td>{item.margem}%</td>
                       <td className={styles.bold}>{fmt(item.venda)}</td>
                       <td><span className={low?styles.stockLow:styles.stockOk}>{item.estoque}</span>{low&&<span className={styles.pillRed}>Baixo</span>}</td>
-                      <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar">✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                      <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar" onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
                     </tr>
                   )
                 })}
@@ -281,7 +293,7 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
                     <td>{item.telefone}</td>
                     <td>{item.email}</td>
                     <td><span className={styles.pillGreen}>{item.prazoEntrega} dias</span></td>
-                    <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar">✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                    <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar" onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
                   </tr>
                 ))}
                 {activeTab==='clientes' && currentItems.map(item => (
@@ -291,7 +303,7 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
                     <td>{item.telefone}</td>
                     <td>{item.email}</td>
                     <td><span className={styles.pillGreen}>{item.totalCompras} compras</span></td>
-                    <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar">✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                    <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar" onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
                   </tr>
                 ))}
                 {activeTab==='usuarios' && currentItems.map(item => (
@@ -300,7 +312,7 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
                     <td>{item.cargo}</td>
                     <td><span className={item.permissao==='Administrador'?styles.pillGreen:item.permissao==='Operador'?styles.pillAmber:styles.pillGray}>{item.permissao}</span></td>
                     <td><span className={item.status==='Ativo'?styles.pillGreen:styles.pillRed}>{item.status}</span></td>
-                    <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar">✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                    <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar" onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
                   </tr>
                 ))}
               </tbody>
@@ -315,11 +327,11 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
         )}
       </main>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={`Novo ${SINGULAR[activeTab].charAt(0).toUpperCase()+SINGULAR[activeTab].slice(1)}`}>
-        {activeTab==='produtos'     && <ProdutoForm     fornecedores={fornecedores} onSave={i=>handleSave('produto',i)}    onCancel={()=>setModalOpen(false)} />}
-        {activeTab==='fornecedores' && <FornecedorForm                             onSave={i=>handleSave('fornecedor',i)} onCancel={()=>setModalOpen(false)} />}
-        {activeTab==='clientes'     && <ClienteForm                                onSave={i=>handleSave('cliente',i)}    onCancel={()=>setModalOpen(false)} />}
-        {activeTab==='usuarios'     && <UsuarioForm                                onSave={i=>handleSave('usuario',i)}    onCancel={()=>setModalOpen(false)} />}
+      <Modal isOpen={modalOpen} onClose={fecharModal} title={modalTitle}>
+        {activeTab==='produtos'     && <ProdutoForm     fornecedores={fornecedores} initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
+        {activeTab==='fornecedores' && <FornecedorForm                             initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
+        {activeTab==='clientes'     && <ClienteForm                                initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
+        {activeTab==='usuarios'     && <UsuarioForm                                initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
       </Modal>
 
       <ConfirmDialog msg={confirmMsg} onConfirm={confirmDelete} onCancel={()=>{setConfirmMsg('');setPendingDel(null)}} />

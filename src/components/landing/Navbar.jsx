@@ -38,12 +38,20 @@ export default function Navbar() {
         </nav>
 
         <div className={styles.actions}>
-          <button className={styles.themeBtn} onClick={toggleTheme} title={isDark ? 'Tema claro' : 'Tema escuro'}>
+          {/* Toggle de tema */}
+          <button
+            className={styles.themeBtn}
+            onClick={toggleTheme}
+            title={isDark ? 'Tema claro' : 'Tema escuro'}
+          >
             <span className={styles.themeBtnIcon}>{isDark ? '☀️' : '🌙'}</span>
             <span className={styles.themeBtnLabel}>{isDark ? 'Claro' : 'Escuro'}</span>
           </button>
-          <button className={styles.registerButton} onClick={() => navigate('/register')}>Criar conta</button>
-          <button className={styles.loginButton} onClick={() => navigate('/login')}>Entrar →</button>
+
+          {/* Apenas botão de Entrar — cadastro só pelo admin */}
+          <button className={styles.loginButton} onClick={() => navigate('/login')}>
+            Entrar →
+          </button>
         </div>
       </div>
     </header>
