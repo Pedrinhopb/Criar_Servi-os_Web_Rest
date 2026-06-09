@@ -1,2 +1,15 @@
+# dependências
 node_modules/
+
+# variáveis de ambiente — NUNCA subir
 .env
+.env.local
+.env.production
+
+# logs
+*.log
+npm-debug.log*
+
+# sistema
+.DS_Store
+Thumbs.db

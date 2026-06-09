@@ -6,7 +6,8 @@
 ![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)
 ![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb)
-![License](https://img.shields.io/badge/license-MIT-green)
+![JWT](https://img.shields.io/badge/JWT-autenticação-orange)
+![BCrypt](https://img.shields.io/badge/BCrypt-criptografia-blue)
 
 ---
 
@@ -23,7 +24,7 @@
 
 O **StockEasy** é uma aplicação web full stack desenvolvida para facilitar o controle de estoque de empresas de pequeno e médio porte. O sistema segue o modelo **SaaS (Software as a Service)** com foco em usabilidade, organização e experiência do usuário.
 
-A plataforma conta com **frontend em React** integrado a um **backend Node.js + Express + MongoDB Atlas**, oferecendo uma interface moderna com suporte a **tema claro e escuro**, animações, contadores dinâmicos e um painel interno completo.
+A plataforma conta com **frontend em React** integrado a um **backend Node.js + Express + MongoDB Atlas**, com autenticação segura via **JWT** e senhas criptografadas com **BCrypt**.
 
 ---
 
@@ -37,7 +38,6 @@ A plataforma conta com **frontend em React** integrado a um **backend Node.js + 
 | **React Router DOM 6** | Roteamento e navegação |
 | **CSS Modules** | Estilização por componente sem conflitos |
 | **Context API** | Gerenciamento de tema global (dark/light mode) |
-| **LocalStorage** | Persistência de autenticação e tema |
 
 ### Backend
 | Tecnologia | Uso |
@@ -46,17 +46,29 @@ A plataforma conta com **frontend em React** integrado a um **backend Node.js + 
 | **Express** | Framework para criação das rotas da API REST |
 | **Mongoose** | ODM para comunicação com o MongoDB |
 | **MongoDB Atlas** | Banco de dados na nuvem |
+| **JWT (jsonwebtoken)** | Autenticação segura com tokens |
+| **BCrypt (bcryptjs)** | Criptografia de senhas |
 | **dotenv** | Gerenciamento de variáveis de ambiente |
 | **cors** | Permissão de requisições cross-origin |
 | **nodemon** | Reinício automático do servidor em desenvolvimento |
 
 ---
 
-## 🧪 Usuário de Teste
+## 🔐 Segurança
+
+- Senhas criptografadas com **BCrypt** (10 rounds) — nunca salvas em texto puro
+- Autenticação via **JWT** — token válido por 8 horas
+- Todas as rotas da API são **protegidas** e exigem token válido
+- Variáveis sensíveis (senha do banco, chave JWT) ficam no `.env` — nunca sobem para o GitHub
+- Arquivo `.env.example` disponível para orientar a configuração
+
+---
+
+## 🧪 Credencial de Teste
 
 ```
 📧 Email: admin@hotmail.com
-🔑 Senha: admin
+🔑 Senha: admin123
 ```
 
 ---
@@ -65,46 +77,51 @@ A plataforma conta com **frontend em React** integrado a um **backend Node.js + 
 
 ### 🏠 Landing Page
 - Hero com preview do dashboard animado e contadores em tempo real
-- Seção de números impactantes (+500 empresas, 98% satisfação)
-- Cards de funcionalidades com hover animado e brilho colorido
+- Seção de serviços com números impactantes
 - Avaliações com rating médio calculado
-- FAQ com acordeão animado por `scrollHeight`
+- FAQ com acordeão animado
 - Formulário de contato
-- Footer com 4 colunas
-- Toggle de tema claro/escuro na navbar
+- Footer completo
+- Toggle de tema claro/escuro
 
 ### 🔐 Login
-- Autenticação integrada com o backend
-- Fallback para credencial de teste quando offline
+- Autenticação real com JWT
+- Senha criptografada com BCrypt
 - Mostrar/esconder senha
 - Validação de campos
-
-### 📝 Cadastro de Conta
-- Formulário com validação completa
-- Barra de força de senha
-- Checkbox de termos de uso
+- Sem opção de cadastro público — apenas admin cria usuários
 
 ### 📋 Cadastro (Área Interna)
-- **Header** com notificações, engrenagem de configurações e perfil do usuário
-- **Sidebar** colapsável com tooltips e navegação ativa
-- **4 abas** com ícones e contadores: Produtos · Fornecedores · Clientes · Usuários
-- Cards de resumo clicáveis com alertas de estoque baixo
-- Busca em tempo real com botão limpar
-- Tabela com zebra striping, hover e linha vermelha para estoque crítico
-- Modal de cadastro com formulário específico por aba
-- Confirmação antes de excluir qualquer item
-- Toast de feedback após salvar ou excluir
-- Aviso visual quando o backend está offline
-- **Integração completa com a API REST**
+- Header com notificações reais de estoque baixo (atualiza a cada 60s)
+- Sidebar colapsável com navegação ativa
+- **4 abas:** Produtos · Fornecedores · Clientes · Usuários
+- CRUD completo integrado com MongoDB Atlas
+- Validação de campos únicos (email, CNPJ, CPF, código de barras)
+- Modal de criar e editar para cada entidade
+- Confirmação antes de excluir
+- Toast de feedback
+- Busca em tempo real
 
-### 🚧 Em Desenvolvimento
-- Dashboard · Relatórios · Administrativo · Estoque · Financeiro · Ajuda
+### 📦 Estoque
+- Visualização com 4 cards de resumo clicáveis (Total, Crítico, Baixo, Ok)
+- Filtros por busca e categoria
+- Tabela colorida por status de estoque
+- Movimentação de estoque (Entrada e Saída)
+- Preview visual da movimentação (Antes → Quantidade → Depois)
+- Histórico de movimentações da sessão
+- Valor total em estoque por produto
 
----
+### 💼 Administrativo
+- Cadastro de custos fixos mensais (salvos no MongoDB Atlas)
+- Distribuição de custos por categoria com barras de progresso
+- Volume médio de vendas e margem de lucro alvo (salvos no Atlas)
+- Cálculo automático do custo fixo por produto
+- Precificação sugerida — preço mínimo por produto com indicador de status
 
-## 🌙 Dark / Light Mode
-
-Suporte completo a tema escuro e claro em todas as telas. A preferência é salva no `localStorage` e aplicada automaticamente. O toggle fica na navbar da landing page e na engrenagem do painel interno.
+### 🌙 Dark / Light Mode
+- Suporte completo em todas as telas
+- Preferência salva no localStorage
+- Toggle no dropdown do perfil
 
 ---
 
@@ -116,77 +133,92 @@ stockeasy/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── landing/              ← Navbar, Hero, Services, Reviews, FAQ, Contact, Footer
-│   │   │   ├── dashboard/            ← Header, Sidebar, Breadcrumb, EmptyState
+│   │   │   ├── dashboard/            ← Header, Sidebar, EmptyState
 │   │   │   └── cadastro/             ← ProdutoForm, FornecedorForm, ClienteForm, UsuarioForm
 │   │   ├── context/
-│   │   │   └── ThemeContext.jsx      ← Dark/Light mode global
+│   │   │   └── ThemeContext.jsx
 │   │   ├── pages/
 │   │   │   ├── LandingPage.jsx
 │   │   │   ├── LoginPage.jsx
-│   │   │   ├── RegisterPage.jsx
-│   │   │   ├── Cadastro.jsx          ← integrado com API
+│   │   │   ├── Cadastro.jsx
+│   │   │   ├── Estoque.jsx
+│   │   │   ├── Administrativo.jsx
 │   │   │   └── WorkInProgress.jsx
 │   │   ├── services/
-│   │   │   └── api.js                ← centraliza todas as chamadas à API
+│   │   │   └── api.js                ← todas as chamadas à API com JWT
 │   │   ├── styles/
 │   │   │   ├── Cadastro.module.css
-│   │   │   ├── Auth.module.css
-│   │   │   └── WorkInProgress.module.css
+│   │   │   ├── Estoque.module.css
+│   │   │   ├── Administrativo.module.css
+│   │   │   └── Auth.module.css
 │   │   ├── App.jsx
 │   │   ├── main.jsx
-│   │   └── index.css                 ← variáveis CSS para dark/light mode
-│   ├── index.html
+│   │   └── index.css
+│   ├── .env.example
+│   ├── .gitignore
 │   └── package.json
 │
 └── stockEasy-backend/                ← Backend Node.js
     ├── src/
     │   ├── config/
-    │   │   └── db.js                 ← conexão MongoDB Atlas com reconexão automática
+    │   │   └── db.js
     │   ├── models/
-    │   │   ├── Produto.js            ← calcula preço de venda automaticamente
+    │   │   ├── Usuario.js
+    │   │   ├── Produto.js
     │   │   ├── Fornecedor.js
     │   │   ├── Cliente.js
-    │   │   └── Usuario.js
+    │   │   ├── CustoFixo.js
+    │   │   └── Configuracao.js
     │   ├── controllers/
+    │   │   ├── authController.js
+    │   │   ├── usuarioController.js
     │   │   ├── produtoController.js
     │   │   ├── fornecedorController.js
     │   │   ├── clienteController.js
-    │   │   └── usuarioController.js
+    │   │   ├── custoFixoController.js
+    │   │   └── configuracaoController.js
     │   ├── routes/
+    │   │   ├── auth.js
+    │   │   ├── usuarios.js
     │   │   ├── produtos.js
     │   │   ├── fornecedores.js
     │   │   ├── clientes.js
-    │   │   └── usuarios.js
+    │   │   ├── custos.js
+    │   │   └── configuracoes.js
     │   ├── middlewares/
-    │   │   └── logMiddleware.js      ← log de todas as requisições
-    │   └── index.js                  ← servidor principal
-    ├── .env                          ← string de conexão (não subir no Git)
+    │   │   ├── authMiddleware.js     ← verifica JWT em todas as rotas
+    │   │   └── logMiddleware.js
+    │   └── index.js
+    ├── .env.example
     ├── .gitignore
     └── package.json
 ```
 
 ---
 
-## 🔀 Rotas da API REST
+## 🔀 Rotas da API
 
+### Autenticação (pública)
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/api/produtos` | Listar produtos |
-| POST | `/api/produtos` | Criar produto |
-| PUT | `/api/produtos/:id` | Atualizar produto |
-| DELETE | `/api/produtos/:id` | Remover produto |
-| GET | `/api/fornecedores` | Listar fornecedores |
-| POST | `/api/fornecedores` | Criar fornecedor |
-| PUT | `/api/fornecedores/:id` | Atualizar fornecedor |
-| DELETE | `/api/fornecedores/:id` | Remover fornecedor |
-| GET | `/api/clientes` | Listar clientes |
-| POST | `/api/clientes` | Criar cliente |
-| PUT | `/api/clientes/:id` | Atualizar cliente |
-| DELETE | `/api/clientes/:id` | Remover cliente |
-| GET | `/api/usuarios` | Listar usuários |
-| POST | `/api/usuarios` | Criar usuário |
-| PUT | `/api/usuarios/:id` | Atualizar usuário |
-| DELETE | `/api/usuarios/:id` | Remover usuário |
+| POST | `/api/auth/login` | Login com email e senha |
+| GET  | `/api/auth/me`    | Dados do usuário logado |
+
+### Rotas protegidas (exigem token JWT)
+| Método | Rota | Descrição |
+|---|---|---|
+| GET/POST | `/api/produtos` | Listar e criar produtos |
+| GET/PUT/DELETE | `/api/produtos/:id` | Buscar, atualizar e remover |
+| GET/POST | `/api/fornecedores` | Listar e criar fornecedores |
+| GET/PUT/DELETE | `/api/fornecedores/:id` | Buscar, atualizar e remover |
+| GET/POST | `/api/clientes` | Listar e criar clientes |
+| GET/PUT/DELETE | `/api/clientes/:id` | Buscar, atualizar e remover |
+| GET/POST | `/api/usuarios` | Listar e criar usuários |
+| GET/PUT/DELETE | `/api/usuarios/:id` | Buscar, atualizar e remover |
+| GET/POST | `/api/custos` | Listar e criar custos fixos |
+| GET/PUT/DELETE | `/api/custos/:id` | Buscar, atualizar e remover |
+| GET | `/api/configuracoes` | Listar configurações |
+| PUT | `/api/configuracoes` | Salvar configuração |
 
 ---
 
@@ -196,15 +228,6 @@ stockeasy/
 - Node.js 16 ou superior
 - Conta no [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (gratuito)
 
-### Frontend
-
-```bash
-cd Criar_Servi-os_Web_Rest
-npm install
-npm run dev
-# acesse http://localhost:5173
-```
-
 ### Backend
 
 ```bash
@@ -212,25 +235,26 @@ cd stockEasy-backend
 npm install
 ```
 
-Configure o `.env`:
+Configure o `.env` a partir do `.env.example`:
 ```
 PORT=3000
-MONGO_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/stockeasy?appName=stockEasy
+MONGO_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/stockeasy
+JWT_SECRET=sua_chave_secreta_longa_aqui
 ```
 
 ```bash
 npm run dev
-# acesse http://localhost:3000
 ```
 
-### Testar no Postman
+### Frontend
 
+```bash
+cd Criar_Servi-os_Web_Rest
+npm install
+npm run dev
 ```
-GET    http://localhost:3000/api/produtos
-POST   http://localhost:3000/api/produtos   (Body → raw → JSON)
-PUT    http://localhost:3000/api/produtos/:id
-DELETE http://localhost:3000/api/produtos/:id
-```
+
+Acesse: `http://localhost:5173`
 
 ---
 
@@ -240,12 +264,11 @@ DELETE http://localhost:3000/api/produtos/:id
 |---|---|---|
 | `/` | Landing Page | Público |
 | `/login` | Login | Público |
-| `/register` | Cadastro de conta | Público |
 | `/cadastro` | Gestão de cadastros | 🔒 Autenticado |
+| `/estoque` | Controle de estoque | 🔒 Autenticado |
+| `/administrativo` | Custos e precificação | 🔒 Autenticado |
 | `/dashboard` | Dashboard | 🔒 Em desenvolvimento |
 | `/relatorios` | Relatórios | 🔒 Em desenvolvimento |
-| `/administrativo` | Administrativo | 🔒 Em desenvolvimento |
-| `/estoque` | Estoque | 🔒 Em desenvolvimento |
 | `/financeiro` | Financeiro | 🔒 Em desenvolvimento |
 | `/ajuda` | Ajuda | 🔒 Em desenvolvimento |
 
@@ -258,9 +281,6 @@ DELETE http://localhost:3000/api/produtos/:id
 | Fundo página | `#f4f6f8` | `#0a0f0c` |
 | Fundo card | `#ffffff` | `#111a14` |
 | Verde principal | `#1a7a4a` | `#22a860` |
-| Verde pálido | `#e6f5ee` | `rgba(34,168,96,0.15)` |
-| Texto título | `#0f1a14` | `#e8f5ee` |
-| Texto suave | `#5a7566` | `#7a9e88` |
 | Fonte títulos | **Syne 800** | **Syne 800** |
 | Fonte corpo | **DM Sans** | **DM Sans** |
 
@@ -268,16 +288,16 @@ DELETE http://localhost:3000/api/produtos/:id
 
 ## 📌 Próximos Passos
 
-- [ ] Autenticação real com JWT
-- [ ] Módulo de Estoque com movimentações
-- [ ] Módulo Financeiro com fluxo de caixa
+- [ ] Dashboard com gráficos e métricas reais
+- [ ] Página de Relatórios
+- [ ] Controle de acesso por perfil (RBAC)
 - [ ] Upload de foto de produtos
-- [ ] Dashboard com gráficos reais
-- [ ] Exportação de relatórios em PDF/Excel
 - [ ] Deploy em produção
 
 ---
 
 ## 📄 Licença
 
-Projeto desenvolvido para fins acadêmicos — Curso de Desenvolvimento Web.
+Projeto desenvolvido para fins acadêmicos — Curso de Desenvolvimento Web REST.
+
+---

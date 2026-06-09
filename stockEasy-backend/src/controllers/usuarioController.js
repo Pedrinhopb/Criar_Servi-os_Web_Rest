@@ -1,4 +1,5 @@
-const Usuario = require('../models/Usuario');
+const bcrypt  = require('bcryptjs')
+const Usuario = require('../models/Usuario')
 
 // GET /api/usuarios
 exports.listar = async (req, res, next) => {
@@ -17,17 +18,21 @@ exports.buscarPorId = async (req, res, next) => {
   } catch (err) { next(err) }
 }
 
-// POST /api/usuarios
+// POST /api/usuarios — criptografa a senha antes de salvar
 exports.criar = async (req, res, next) => {
   try {
-    // verifica email duplicado com mensagem clara
+    // verifica email duplicado
     const emailExiste = await Usuario.findOne({ email: req.body.email })
     if (emailExiste) {
       return res.status(400).json({ mensagem: 'Este e-mail já está cadastrado' })
     }
 
-    const novo  = new Usuario(req.body)
+    // criptografa a senha com BCrypt (10 rounds)
+    const senhaCriptografada = await bcrypt.hash(req.body.senha, 10)
+
+    const novo  = new Usuario({ ...req.body, senha: senhaCriptografada })
     const salvo = await novo.save()
+
     const { senha, ...semSenha } = salvo.toObject()
     res.status(201).json(semSenha)
   } catch (err) {
@@ -41,12 +46,17 @@ exports.criar = async (req, res, next) => {
 // PUT /api/usuarios/:id
 exports.atualizar = async (req, res, next) => {
   try {
-    // verifica se email já pertence a outro usuário
+    // verifica email duplicado em outro usuário
     if (req.body.email) {
       const emailExiste = await Usuario.findOne({ email: req.body.email, _id: { $ne: req.params.id } })
       if (emailExiste) {
         return res.status(400).json({ mensagem: 'Este e-mail já está sendo usado por outro usuário' })
       }
+    }
+
+    // se veio nova senha, criptografa antes de salvar
+    if (req.body.senha) {
+      req.body.senha = await bcrypt.hash(req.body.senha, 10)
     }
 
     const atualizado = await Usuario.findByIdAndUpdate(

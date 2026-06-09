@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { authAPI } from '../services/api'
 import styles from '../styles/Auth.module.css'
-
-const BASE_URL = 'http://localhost:3000/api'
 
 export default function LoginPage({ onLogin }) {
   const navigate = useNavigate()
@@ -28,33 +27,24 @@ export default function LoginPage({ onLogin }) {
     setErro('')
 
     try {
-      const res      = await fetch(`${BASE_URL}/usuarios`)
-      const usuarios = await res.json()
+      // autenticação real com JWT
+      const res = await authAPI.login(form.email, form.senha)
 
-      const usuario = usuarios.find(u => u.email === form.email && u.status === 'Ativo')
+      // salva o token e os dados do usuário
+      localStorage.setItem('stockeasy_token', res.token)
 
-      if (usuario) {
-        onLogin({ name: usuario.nome, email: usuario.email, role: usuario.permissao, id: usuario._id })
-        navigate('/cadastro')
-        return
-      }
+      onLogin({
+        name:  res.usuario.nome,
+        email: res.usuario.email,
+        role:  res.usuario.permissao,
+        cargo: res.usuario.cargo,
+        id:    res.usuario.id,
+      })
 
-      // fallback — usuário padrão de teste
-      if (form.email === 'admin@hotmail.com' && form.senha === 'admin') {
-        onLogin({ name: 'Admin', email: form.email, role: 'Administrador' })
-        navigate('/cadastro')
-        return
-      }
-
-      setErro('E-mail ou senha incorretos.')
-    } catch {
-      // backend offline — usa credencial de teste
-      if (form.email === 'admin@hotmail.com' && form.senha === 'admin') {
-        onLogin({ name: 'Admin', email: form.email, role: 'Administrador' })
-        navigate('/cadastro')
-      } else {
-        setErro('Servidor offline. Use admin@hotmail.com / admin para testar.')
-      }
+      navigate('/cadastro')
+    } catch (err) {
+      // mensagem de erro do backend ou fallback genérico
+      setErro(err.message || 'E-mail ou senha incorretos.')
     } finally {
       setLoading(false)
     }
@@ -94,17 +84,23 @@ export default function LoginPage({ onLogin }) {
 
           <div className={styles.field}>
             <label className={styles.label}>Senha</label>
-            <input
-              className={styles.input}
-              type={showPwd ? 'text' : 'password'}
-              name="senha"
-              placeholder="••••••••"
-              value={form.senha}
-              onChange={handleChange}
-            />
-            <button type="button" className={styles.eyeBtn} onClick={() => setShowPwd(v => !v)}>
-              {showPwd ? '🙈' : '👁️'}
-            </button>
+            <div style={{ position:'relative' }}>
+              <input
+                className={styles.input}
+                type={showPwd ? 'text' : 'password'}
+                name="senha"
+                placeholder="••••••••"
+                value={form.senha}
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                className={styles.eyeBtn}
+                onClick={() => setShowPwd(v => !v)}
+              >
+                {showPwd ? '🙈' : '👁️'}
+              </button>
+            </div>
             <div className={styles.forgot}>
               <a href="#">Esqueceu a senha?</a>
             </div>
@@ -118,8 +114,6 @@ export default function LoginPage({ onLogin }) {
             {loading ? 'Entrando...' : 'Entrar →'}
           </button>
         </form>
-
-        {/* removido link de criar conta — cadastro só pelo admin */}
       </div>
     </div>
   )
