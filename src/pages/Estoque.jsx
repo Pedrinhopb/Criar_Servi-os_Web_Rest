@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import Header    from '../components/dashboard/Header'
 import Sidebar   from '../components/dashboard/Sidebar'
+import { produtosAPI } from '../services/api'
 import styles    from '../styles/Estoque.module.css'
 
 const fmt = v => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v)
@@ -35,6 +36,8 @@ function Toast({ msg, tipo = 'sucesso', onDone }) {
 }
 
 export default function Estoque({ user, onLogout, sidebarAberta, onToggleSidebar, onFecharSidebar }) {
+  const isVisualizador = user?.role === 'Visualizador'
+
   const [produtos,      setProdutos]      = useState([])
   const [loading,       setLoading]       = useState(true)
   const [backendOk,     setBackendOk]     = useState(true)
@@ -53,12 +56,12 @@ export default function Estoque({ user, onLogout, sidebarAberta, onToggleSidebar
   async function carregarProdutos() {
     setLoading(true)
     try {
-      const res  = await fetch('http://localhost:3000/api/produtos')
-      const data = await res.json()
-      setProdutos(data)
+      const data = await produtosAPI.listar() // ← usa a API com token JWT
+      setProdutos(Array.isArray(data) ? data : [])
       setBackendOk(true)
     } catch {
       setBackendOk(false)
+      setProdutos([])
     } finally {
       setLoading(false)
     }
@@ -89,6 +92,7 @@ export default function Estoque({ user, onLogout, sidebarAberta, onToggleSidebar
   }), [produtos])
 
   function abrirMovimentacao(produto, tipo) {
+    if (isVisualizador) return
     setProdutoSel(produto)
     setTipoMov(tipo)
     setQuantidade('')
@@ -97,12 +101,9 @@ export default function Estoque({ user, onLogout, sidebarAberta, onToggleSidebar
     setModalMov(true)
   }
 
-  /* calcula o resultado do preview */
-  const qtdNum       = Number(quantidade) || 0
-  const estoqueAntes = produtoSel?.estoque || 0
-  const estoqueDepois = tipoMov === 'entrada'
-    ? estoqueAntes + qtdNum
-    : estoqueAntes - qtdNum
+  const qtdNum        = Number(quantidade) || 0
+  const estoqueAntes  = produtoSel?.estoque || 0
+  const estoqueDepois = tipoMov === 'entrada' ? estoqueAntes + qtdNum : estoqueAntes - qtdNum
 
   async function handleMovimentacao(e) {
     e.preventDefault()
@@ -113,26 +114,18 @@ export default function Estoque({ user, onLogout, sidebarAberta, onToggleSidebar
       return
     }
     try {
-      await fetch(`http://localhost:3000/api/produtos/${produtoSel._id}`, {
-        method:  'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ estoque: estoqueDepois }),
-      })
+      await produtosAPI.atualizar(produtoSel._id, { estoque: estoqueDepois }) // ← usa API com token
       setHistorico(prev => [{
-        id:            Date.now(),
-        produto:       produtoSel.nome,
-        tipo:          tipoMov,
-        quantidade:    qtdNum,
-        motivo:        motivo || '—',
-        estoqueAntes,
-        estoqueDepois,
-        data:          new Date().toLocaleString('pt-BR'),
+        id: Date.now(), produto: produtoSel.nome, tipo: tipoMov,
+        quantidade: qtdNum, motivo: motivo || '—',
+        estoqueAntes, estoqueDepois,
+        data: new Date().toLocaleString('pt-BR'),
       }, ...prev])
       setModalMov(false)
       setToast({ msg:`${tipoMov === 'entrada' ? 'Entrada' : 'Saída'} de ${qtdNum} ${produtoSel.unidade || 'un'} registrada!`, tipo:'sucesso' })
       carregarProdutos()
-    } catch {
-      setMovErro('Erro ao atualizar estoque — verifique o backend')
+    } catch (err) {
+      setMovErro(err.message || 'Erro ao atualizar estoque')
     }
   }
 
@@ -154,12 +147,18 @@ export default function Estoque({ user, onLogout, sidebarAberta, onToggleSidebar
           </div>
         )}
 
+        {isVisualizador && (
+          <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:10, padding:'12px 16px', marginBottom:16, fontSize:14, color:'#b45309', display:'flex', alignItems:'center', gap:8 }}>
+            👁️ Você está no modo <strong>Visualizador</strong> — apenas leitura.
+          </div>
+        )}
+
         <div className={styles.pageHeader}>
           <div>
             <h1 className={styles.pageTitle}>Estoque</h1>
             <p className={styles.pageSubtitle}>Visualize, filtre e movimente o estoque dos produtos</p>
           </div>
-          <button className={styles.btnReload} onClick={carregarProdutos}>🔄 Atualizar</button>
+
         </div>
 
         {/* cards de resumo */}
@@ -170,11 +169,7 @@ export default function Estoque({ user, onLogout, sidebarAberta, onToggleSidebar
             { key:'baixo',   icon:'⚠️', label:'Estoque baixo',     valor:resumo.baixo,   extra:styles.resumoCardBaixo  },
             { key:'ok',      icon:'✅', label:'Estoque ok',        valor:resumo.ok,      extra:styles.resumoCardOk     },
           ].map(card => (
-            <button
-              key={card.key}
-              className={`${styles.resumoCard} ${card.extra} ${filtroStatus===card.key?styles.resumoActive:''}`}
-              onClick={() => setFiltroStatus(card.key)}
-            >
+            <button key={card.key} className={`${styles.resumoCard} ${card.extra} ${filtroStatus===card.key?styles.resumoActive:''}`} onClick={() => setFiltroStatus(card.key)}>
               <div className={styles.resumoIcon}>{card.icon}</div>
               <div className={styles.resumoInfo}>
                 <div className={styles.resumoValor}>{card.valor}</div>
@@ -205,7 +200,9 @@ export default function Estoque({ user, onLogout, sidebarAberta, onToggleSidebar
           ) : (
             <table className={styles.table}>
               <thead>
-                <tr>{['Produto','Categoria','Fornecedor','Estoque atual','Mínimo','Status','Valor em estoque','Ações'].map(h=><th key={h}>{h}</th>)}</tr>
+                <tr>
+                  {['Produto','Categoria','Fornecedor','Estoque atual','Mínimo','Status','Valor em estoque', !isVisualizador && 'Ações'].filter(Boolean).map(h=><th key={h}>{h}</th>)}
+                </tr>
               </thead>
               <tbody>
                 {produtosFiltrados.map(p => {
@@ -228,12 +225,14 @@ export default function Estoque({ user, onLogout, sidebarAberta, onToggleSidebar
                       <td>{p.estoqueMinimo||0} {p.unidade||'un'}</td>
                       <td><span className={cfg.cor}>{cfg.label}</span></td>
                       <td className={styles.bold}>{fmt((p.estoque||0)*(p.custo||0))}</td>
-                      <td>
-                        <div className={styles.actionBtns}>
-                          <button className={styles.btnEntrada} onClick={()=>abrirMovimentacao(p,'entrada')}>↑ Entrada</button>
-                          <button className={styles.btnSaida}   onClick={()=>abrirMovimentacao(p,'saida')} disabled={p.estoque===0}>↓ Saída</button>
-                        </div>
-                      </td>
+                      {!isVisualizador && (
+                        <td>
+                          <div className={styles.actionBtns}>
+                            <button className={styles.btnEntrada} onClick={()=>abrirMovimentacao(p,'entrada')}>↑ Entrada</button>
+                            <button className={styles.btnSaida}   onClick={()=>abrirMovimentacao(p,'saida')} disabled={p.estoque===0}>↓ Saída</button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   )
                 })}
@@ -277,72 +276,68 @@ export default function Estoque({ user, onLogout, sidebarAberta, onToggleSidebar
         )}
       </main>
 
-      {/* Modal movimentação */}
-      <Modal isOpen={modalMov} onClose={()=>setModalMov(false)} title={tipoMov==='entrada'?'↑ Registrar Entrada':'↓ Registrar Saída'}>
-        {produtoSel && (
-          <form onSubmit={handleMovimentacao}>
-            {/* info produto */}
-            <div className={styles.movProdInfo}>
-              <div className={styles.movProdIcon}>📦</div>
-              <div>
-                <div className={styles.movProdNome}>{produtoSel.nome}</div>
-                <div className={styles.movProdEstoque}>Estoque atual: <strong>{estoqueAntes} {produtoSel.unidade||'un'}</strong></div>
-              </div>
-            </div>
-
-            {/* tipo */}
-            <div className={styles.movTipos}>
-              <button type="button" className={`${styles.movTipoBtn} ${tipoMov==='entrada'?styles.movTipoEntrada:''}`} onClick={()=>{setTipoMov('entrada');setMovErro('')}}>↑ Entrada</button>
-              <button type="button" className={`${styles.movTipoBtn} ${tipoMov==='saida'?styles.movTipoSaida:''}`}   onClick={()=>{setTipoMov('saida');setMovErro('')}} disabled={estoqueAntes===0}>↓ Saída</button>
-            </div>
-
-            {/* quantidade */}
-            <div className={styles.movField}>
-              <label className={styles.movLabel}>Quantidade *</label>
-              <input className={styles.movInput} type="number" min="1" max={tipoMov==='saida'?estoqueAntes:undefined} value={quantidade} onChange={e=>setQuantidade(e.target.value)} placeholder={`Ex: 10`} autoFocus />
-              {tipoMov==='saida' && <span className={styles.movHint}>Máximo disponível: {estoqueAntes} {produtoSel.unidade||'un'}</span>}
-            </div>
-
-            {/* motivo */}
-            <div className={styles.movField}>
-              <label className={styles.movLabel}>Motivo (opcional)</label>
-              <input className={styles.movInput} value={motivo} onChange={e=>setMotivo(e.target.value)} placeholder={tipoMov==='entrada'?'Ex: Compra de fornecedor':'Ex: Venda, Ajuste, Perda'} />
-            </div>
-
-            {/* ── PREVIEW CORRIGIDO ── */}
-            {qtdNum > 0 && (
-              <div className={styles.preview}>
-                <div className={styles.previewBloco}>
-                  <span className={styles.previewRotulo}>Antes</span>
-                  <span className={styles.previewNum}>{estoqueAntes}</span>
-                  <span className={styles.previewUnidade}>{produtoSel.unidade||'un'}</span>
-                </div>
-
-                <div className={`${styles.previewSeta} ${tipoMov==='entrada'?styles.previewSetaEntrada:styles.previewSetaSaida}`}>
-                  {tipoMov==='entrada' ? `+${qtdNum}` : `-${qtdNum}`}
-                </div>
-
-                <div className={styles.previewBloco}>
-                  <span className={styles.previewRotulo}>Depois</span>
-                  <span className={`${styles.previewNum} ${estoqueDepois<=0?styles.previewNumCritico:estoqueDepois<=produtoSel.estoqueMinimo?styles.previewNumBaixo:styles.previewNumOk}`}>
-                    {estoqueDepois}
-                  </span>
-                  <span className={styles.previewUnidade}>{produtoSel.unidade||'un'}</span>
+      {/* Modal movimentação — só para não-visualizadores */}
+      {!isVisualizador && (
+        <Modal isOpen={modalMov} onClose={()=>setModalMov(false)} title={tipoMov==='entrada'?'↑ Registrar Entrada':'↓ Registrar Saída'}>
+          {produtoSel && (
+            <form onSubmit={handleMovimentacao}>
+              <div className={styles.movProdInfo}>
+                <div className={styles.movProdIcon}>📦</div>
+                <div>
+                  <div className={styles.movProdNome}>{produtoSel.nome}</div>
+                  <div className={styles.movProdEstoque}>Estoque atual: <strong>{estoqueAntes} {produtoSel.unidade||'un'}</strong></div>
                 </div>
               </div>
-            )}
 
-            {movErro && <div className={styles.movErro}>✗ {movErro}</div>}
+              <div className={styles.movTipos}>
+                <button type="button" className={`${styles.movTipoBtn} ${tipoMov==='entrada'?styles.movTipoEntrada:''}`} onClick={()=>{setTipoMov('entrada');setMovErro('')}}>↑ Entrada</button>
+                <button type="button" className={`${styles.movTipoBtn} ${tipoMov==='saida'?styles.movTipoSaida:''}`}   onClick={()=>{setTipoMov('saida');setMovErro('')}} disabled={estoqueAntes===0}>↓ Saída</button>
+              </div>
 
-            <div className={styles.modalFooter}>
-              <button type="button" className={styles.cancelButton} onClick={()=>setModalMov(false)}>Cancelar</button>
-              <button type="submit" className={tipoMov==='entrada'?styles.btnSalvarEntrada:styles.btnSalvarSaida}>
-                {tipoMov==='entrada'?'↑ Confirmar Entrada':'↓ Confirmar Saída'}
-              </button>
-            </div>
-          </form>
-        )}
-      </Modal>
+              <div className={styles.movField}>
+                <label className={styles.movLabel}>Quantidade *</label>
+                <input className={styles.movInput} type="number" min="1" max={tipoMov==='saida'?estoqueAntes:undefined} value={quantidade} onChange={e=>setQuantidade(e.target.value)} placeholder="Ex: 10" autoFocus />
+                {tipoMov==='saida' && <span className={styles.movHint}>Máximo disponível: {estoqueAntes} {produtoSel.unidade||'un'}</span>}
+              </div>
+
+              <div className={styles.movField}>
+                <label className={styles.movLabel}>Motivo (opcional)</label>
+                <input className={styles.movInput} value={motivo} onChange={e=>setMotivo(e.target.value)} placeholder={tipoMov==='entrada'?'Ex: Compra de fornecedor':'Ex: Venda, Ajuste, Perda'} />
+              </div>
+
+              {/* preview */}
+              {qtdNum > 0 && (
+                <div className={styles.preview}>
+                  <div className={styles.previewBloco}>
+                    <span className={styles.previewRotulo}>Antes</span>
+                    <span className={styles.previewNum}>{estoqueAntes}</span>
+                    <span className={styles.previewUnidade}>{produtoSel.unidade||'un'}</span>
+                  </div>
+                  <div className={`${styles.previewSeta} ${tipoMov==='entrada'?styles.previewSetaEntrada:styles.previewSetaSaida}`}>
+                    {tipoMov==='entrada'?`+${qtdNum}`:`-${qtdNum}`}
+                  </div>
+                  <div className={styles.previewBloco}>
+                    <span className={styles.previewRotulo}>Depois</span>
+                    <span className={`${styles.previewNum} ${estoqueDepois<=0?styles.previewNumCritico:produtoSel.estoqueMinimo>0&&estoqueDepois<=produtoSel.estoqueMinimo?styles.previewNumBaixo:styles.previewNumOk}`}>
+                      {estoqueDepois}
+                    </span>
+                    <span className={styles.previewUnidade}>{produtoSel.unidade||'un'}</span>
+                  </div>
+                </div>
+              )}
+
+              {movErro && <div className={styles.movErro}>✗ {movErro}</div>}
+
+              <div className={styles.modalFooter}>
+                <button type="button" className={styles.cancelButton} onClick={()=>setModalMov(false)}>Cancelar</button>
+                <button type="submit" className={tipoMov==='entrada'?styles.btnSalvarEntrada:styles.btnSalvarSaida}>
+                  {tipoMov==='entrada'?'↑ Confirmar Entrada':'↓ Confirmar Saída'}
+                </button>
+              </div>
+            </form>
+          )}
+        </Modal>
+      )}
 
       <Toast msg={toast.msg} tipo={toast.tipo} onDone={()=>setToast({msg:'',tipo:'sucesso'})} />
     </div>

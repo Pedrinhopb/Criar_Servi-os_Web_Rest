@@ -39,6 +39,9 @@ function Toast({ msg, tipo = 'sucesso', onDone }) {
 }
 
 export default function Administrativo({ user, onLogout, sidebarAberta, onToggleSidebar, onFecharSidebar }) {
+  // ── permissão ──
+  const isVisualizador = user?.role === 'Visualizador'
+
   const [produtos,     setProdutos]     = useState([])
   const [custos,       setCustos]       = useState([])
   const [loading,      setLoading]      = useState(true)
@@ -66,7 +69,6 @@ export default function Administrativo({ user, onLogout, sidebarAberta, onToggle
       ])
       setProdutos(p)
       setCustos(c)
-      // carrega configurações salvas no Atlas
       if (config.volumeMensal) setVolumeMensal(Number(config.volumeMensal))
       if (config.margemLucro)  setMargemLucro(Number(config.margemLucro))
       setBackendOk(true)
@@ -80,24 +82,24 @@ export default function Administrativo({ user, onLogout, sidebarAberta, onToggle
 
   useEffect(() => { carregarTudo() }, [])
 
-  // salva configuração no Atlas com debounce
   const salvarConfig = useCallback(async (chave, valor) => {
+    if (isVisualizador) return // bloqueia visualizador
     setSalvandoConfig(true)
     try {
       await configuracoesAPI.salvar(chave, valor)
-    } catch {
-      // silencioso — não bloqueia o usuário
-    } finally {
+    } catch { } finally {
       setSalvandoConfig(false)
     }
-  }, [])
+  }, [isVisualizador])
 
   function handleVolumeMensal(valor) {
+    if (isVisualizador) return
     setVolumeMensal(valor)
     salvarConfig('volumeMensal', valor)
   }
 
   function handleMargemLucro(valor) {
+    if (isVisualizador) return
     setMargemLucro(valor)
     salvarConfig('margemLucro', valor)
   }
@@ -192,9 +194,17 @@ export default function Administrativo({ user, onLogout, sidebarAberta, onToggle
       <Sidebar aberta={sidebarAberta} onFechar={onFecharSidebar} onLogout={onLogout} onToggle={onToggleSidebar} />
 
       <main className={styles.main}>
+
         {!backendOk && (
           <div className={styles.offlineAlert}>
             ⚠️ Backend offline — rode <code>npm run dev</code> na pasta <code>stockEasy-backend</code>
+          </div>
+        )}
+
+        {/* aviso visualizador */}
+        {isVisualizador && (
+          <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:10, padding:'12px 16px', marginBottom:16, fontSize:14, color:'#b45309', display:'flex', alignItems:'center', gap:8 }}>
+            👁️ Você está no modo <strong>Visualizador</strong> — apenas leitura. Contate o administrador para fazer alterações.
           </div>
         )}
 
@@ -204,8 +214,7 @@ export default function Administrativo({ user, onLogout, sidebarAberta, onToggle
             <p className={styles.pageSubtitle}>Gerencie custos fixos e calcule a precificação ideal dos produtos</p>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            {salvandoConfig && <span style={{ fontSize:12, color:'var(--text-muted)' }}>💾 Salvando...</span>}
-            <button className={styles.btnReload} onClick={carregarTudo}>🔄 Atualizar</button>
+
           </div>
         </div>
 
@@ -263,6 +272,8 @@ export default function Administrativo({ user, onLogout, sidebarAberta, onToggle
                     type="number" min="1"
                     value={volumeMensal}
                     onChange={e => handleVolumeMensal(Number(e.target.value))}
+                    disabled={isVisualizador}
+                    style={isVisualizador ? { opacity:0.6, cursor:'not-allowed' } : {}}
                   />
                 </div>
                 <div className={styles.configField}>
@@ -272,10 +283,15 @@ export default function Administrativo({ user, onLogout, sidebarAberta, onToggle
                     type="number" min="0"
                     value={margemLucro}
                     onChange={e => handleMargemLucro(Number(e.target.value))}
+                    disabled={isVisualizador}
+                    style={isVisualizador ? { opacity:0.6, cursor:'not-allowed' } : {}}
                   />
                 </div>
               </div>
-              <button className={styles.btnNew} onClick={abrirNovoCusto}>+ Novo custo</button>
+              {/* botão novo — escondido para Visualizador */}
+              {!isVisualizador && (
+                <button className={styles.btnNew} onClick={abrirNovoCusto}>+ Novo custo</button>
+              )}
             </div>
 
             {porCategoria.length > 0 && (
@@ -300,12 +316,14 @@ export default function Administrativo({ user, onLogout, sidebarAberta, onToggle
                 <div className={styles.empty}>
                   <div style={{fontSize:40,marginBottom:12}}>💸</div>
                   <p>Nenhum custo fixo cadastrado ainda.</p>
-                  <p style={{fontSize:13,marginTop:4}}>Clique em <strong>+ Novo custo</strong> para começar.</p>
+                  {!isVisualizador && <p style={{fontSize:13,marginTop:4}}>Clique em <strong>+ Novo custo</strong> para começar.</p>}
                 </div>
               ) : (
                 <table className={styles.table}>
                   <thead>
-                    <tr>{['Descrição','Categoria','Valor mensal','% do total','Ações'].map(h=><th key={h}>{h}</th>)}</tr>
+                    <tr>
+                      {['Descrição','Categoria','Valor mensal','% do total', !isVisualizador && 'Ações'].filter(Boolean).map(h=><th key={h}>{h}</th>)}
+                    </tr>
                   </thead>
                   <tbody>
                     {custos.map(c => (
@@ -321,19 +339,21 @@ export default function Administrativo({ user, onLogout, sidebarAberta, onToggle
                             <span>{totalFixoMensal>0?fmtPct((c.valor/totalFixoMensal)*100):'0%'}</span>
                           </div>
                         </td>
-                        <td>
-                          <div className={styles.actionBtns}>
-                            <button className={styles.btnEdit}   data-tooltip="Editar"  onClick={()=>abrirEditar(c)}>✏️</button>
-                            <button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>excluirCusto(c._id, c.nome)}>🗑️</button>
-                          </div>
-                        </td>
+                        {!isVisualizador && (
+                          <td>
+                            <div className={styles.actionBtns}>
+                              <button className={styles.btnEdit}   onClick={()=>abrirEditar(c)}>✏️</button>
+                              <button className={styles.btnDelete} onClick={()=>excluirCusto(c._id, c.nome)}>🗑️</button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                     <tr className={styles.totalRow}>
                       <td colSpan={2} className={styles.bold}>Total mensal</td>
                       <td className={styles.totalValor}>{fmt(totalFixoMensal)}</td>
                       <td>100%</td>
-                      <td/>
+                      {!isVisualizador && <td/>}
                     </tr>
                   </tbody>
                 </table>
@@ -399,16 +419,8 @@ export default function Administrativo({ user, onLogout, sidebarAberta, onToggle
                           </div>
                         </td>
                         <td className={styles.bold}>{fmt(p.venda||0)}</td>
-                        <td>
-                          <span className={p.status==='baixo'?styles.precoMinimoBaixo:styles.precoMinimoOk}>
-                            {fmt(p.precoMinimo)}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={p.margemReal >= margemLucro ? styles.margemOk : styles.margemBaixo}>
-                            {fmtPct(p.margemReal)}
-                          </span>
-                        </td>
+                        <td><span className={p.status==='baixo'?styles.precoMinimoBaixo:styles.precoMinimoOk}>{fmt(p.precoMinimo)}</span></td>
+                        <td><span className={p.margemReal >= margemLucro ? styles.margemOk : styles.margemBaixo}>{fmtPct(p.margemReal)}</span></td>
                         <td><span className={statusConfig[p.status]?.cls}>{statusConfig[p.status]?.label}</span></td>
                       </tr>
                     ))}
@@ -423,31 +435,33 @@ export default function Administrativo({ user, onLogout, sidebarAberta, onToggle
         )}
       </main>
 
-      <Modal isOpen={modalCusto} onClose={()=>setModalCusto(false)} title={editCusto?'Editar Custo Fixo':'Novo Custo Fixo'}>
-        <form onSubmit={handleSaveCusto} className={styles.formCol}>
-          <div className={styles.formField}>
-            <label className={styles.formLabel}>Descrição *</label>
-            <input className={styles.formInput} value={nomeCusto} onChange={e=>setNomeCusto(e.target.value)} placeholder="Ex: Aluguel, Energia, Salário..." autoFocus />
-          </div>
-          <div className={styles.formField}>
-            <label className={styles.formLabel}>Categoria</label>
-            <select className={styles.formInput} value={catCusto} onChange={e=>setCatCusto(e.target.value)}>
-              {CATEGORIAS_CUSTO.map(c=><option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div className={styles.formField}>
-            <label className={styles.formLabel}>Valor mensal (R$) *</label>
-            <input className={styles.formInput} value={valorCusto} onChange={e=>setValorCusto(e.target.value)} placeholder="Ex: 1500,00" />
-          </div>
-          {erroCusto && <div className={styles.alertErro}>✗ {erroCusto}</div>}
-          <div className={styles.formFooter}>
-            <button type="button" className={styles.cancelButton} onClick={()=>setModalCusto(false)}>Cancelar</button>
-            <button type="submit" className={styles.saveButton} disabled={salvando}>
-              {salvando ? 'Salvando...' : editCusto ? 'Salvar alterações' : 'Adicionar custo'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      {!isVisualizador && (
+        <Modal isOpen={modalCusto} onClose={()=>setModalCusto(false)} title={editCusto?'Editar Custo Fixo':'Novo Custo Fixo'}>
+          <form onSubmit={handleSaveCusto} className={styles.formCol}>
+            <div className={styles.formField}>
+              <label className={styles.formLabel}>Descrição *</label>
+              <input className={styles.formInput} value={nomeCusto} onChange={e=>setNomeCusto(e.target.value)} placeholder="Ex: Aluguel, Energia, Salário..." autoFocus />
+            </div>
+            <div className={styles.formField}>
+              <label className={styles.formLabel}>Categoria</label>
+              <select className={styles.formInput} value={catCusto} onChange={e=>setCatCusto(e.target.value)}>
+                {CATEGORIAS_CUSTO.map(c=><option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className={styles.formField}>
+              <label className={styles.formLabel}>Valor mensal (R$) *</label>
+              <input className={styles.formInput} value={valorCusto} onChange={e=>setValorCusto(e.target.value)} placeholder="Ex: 1500,00" />
+            </div>
+            {erroCusto && <div className={styles.alertErro}>✗ {erroCusto}</div>}
+            <div className={styles.formFooter}>
+              <button type="button" className={styles.cancelButton} onClick={()=>setModalCusto(false)}>Cancelar</button>
+              <button type="submit" className={styles.saveButton} disabled={salvando}>
+                {salvando ? 'Salvando...' : editCusto ? 'Salvar alterações' : 'Adicionar custo'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       <Toast msg={toast.msg} tipo={toast.tipo} onDone={()=>setToast({msg:'',tipo:'sucesso'})} />
     </div>

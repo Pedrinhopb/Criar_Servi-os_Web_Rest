@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage     from './pages/LandingPage'
 import LoginPage       from './pages/LoginPage'
+import Dashboard       from './pages/Dashboard'
 import Cadastro        from './pages/Cadastro'
 import Estoque         from './pages/Estoque'
 import Administrativo  from './pages/Administrativo'
+import Financeiro      from './pages/Financeiro'
 import WorkInProgress  from './pages/WorkInProgress'
 
 export default function App() {
@@ -26,7 +28,7 @@ export default function App() {
 
   function handleLogout() {
     localStorage.removeItem('stockeasy_user')
-    localStorage.removeItem('stockeasy_token') // ← remove o token também
+    localStorage.removeItem('stockeasy_token')
     setUser(null)
   }
 
@@ -41,18 +43,18 @@ export default function App() {
   return (
     <Routes>
       <Route path="/"         element={<LandingPage />} />
-      <Route path="/login"    element={user ? <Navigate to="/cadastro" replace /> : <LoginPage onLogin={handleLogin} />} />
+      <Route path="/login"    element={user ? <Navigate to="/dashboard" replace /> : <LoginPage onLogin={handleLogin} />} />
       <Route path="/register" element={<Navigate to="/login" replace />} />
 
-      <Route path="/cadastro/*"     element={user ? <Cadastro       {...sharedProps} /> : <Navigate to="/login" replace />} />
+      <Route path="/dashboard/*"      element={user ? <Dashboard      {...sharedProps} /> : <Navigate to="/login" replace />} />
+      <Route path="/cadastro/"     element={user ? <Cadastro       {...sharedProps} /> : <Navigate to="/login" replace />} />
       <Route path="/estoque"        element={user ? <Estoque        {...sharedProps} /> : <Navigate to="/login" replace />} />
       <Route path="/administrativo" element={user ? <Administrativo {...sharedProps} /> : <Navigate to="/login" replace />} />
-      <Route path="/dashboard"      element={user ? <WorkInProgress {...sharedProps} title="Dashboard"  /> : <Navigate to="/login" replace />} />
-      <Route path="/relatorios"     element={user ? <WorkInProgress {...sharedProps} title="Relatórios" /> : <Navigate to="/login" replace />} />
-      <Route path="/financeiro"     element={user ? <WorkInProgress {...sharedProps} title="Financeiro" /> : <Navigate to="/login" replace />} />
-      <Route path="/ajuda"          element={user ? <WorkInProgress {...sharedProps} title="Ajuda"      /> : <Navigate to="/login" replace />} />
+      <Route path="/financeiro"     element={user ? <Financeiro     {...sharedProps} /> : <Navigate to="/login" replace />} />
+      <Route path="/ajuda"          element={user ? <WorkInProgress {...sharedProps} title="Ajuda" /> : <Navigate to="/login" replace />} />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/relatorios" element={<Navigate to="/" replace />} />
+      <Route path="*"           element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

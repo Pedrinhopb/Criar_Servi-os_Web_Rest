@@ -26,7 +26,6 @@ const SEARCH_PH = {
 const SINGULAR = { produtos:'produto', fornecedores:'fornecedor', clientes:'cliente', usuarios:'usuário' }
 const fmt = v => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v)
 
-/* ── Modal ── */
 function Modal({ isOpen, onClose, title, children }) {
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
@@ -46,7 +45,6 @@ function Modal({ isOpen, onClose, title, children }) {
   )
 }
 
-/* ── Toast ── */
 function Toast({ msg, tipo = 'sucesso', onDone }) {
   useEffect(() => { if (msg) { const t = setTimeout(onDone, 3000); return () => clearTimeout(t) } }, [msg])
   if (!msg) return null
@@ -57,7 +55,6 @@ function Toast({ msg, tipo = 'sucesso', onDone }) {
   )
 }
 
-/* ── Confirmação de exclusão ── */
 function ConfirmDialog({ msg, onConfirm, onCancel }) {
   if (!msg) return null
   return (
@@ -74,7 +71,6 @@ function ConfirmDialog({ msg, onConfirm, onCancel }) {
   )
 }
 
-/* ── Loading ── */
 function Loading() {
   return (
     <div style={{ padding:'40px', textAlign:'center', color:'var(--text-muted)' }}>
@@ -85,6 +81,10 @@ function Loading() {
 }
 
 export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSidebar, onFecharSidebar }) {
+  // ── permissão do usuário logado ──
+  const isVisualizador = user?.role === 'Visualizador'
+  const isAdmin        = user?.role === 'Administrador'
+
   const [activeTab,  setActiveTab]  = useState('produtos')
   const [modalOpen,  setModalOpen]  = useState(false)
   const [modalMode,  setModalMode]  = useState('criar')
@@ -104,7 +104,6 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
   const apis    = { produtos: produtosAPI, fornecedores: fornecedoresAPI, clientes: clientesAPI, usuarios: usuariosAPI }
   const setters = { produtos: setProdutos, fornecedores: setFornecedores, clientes: setClientes, usuarios: setUsuarios }
 
-  // ── Carrega TODAS as abas de uma vez ao iniciar ──
   async function carregarTudo() {
     setLoading(true)
     try {
@@ -114,10 +113,7 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
         clientesAPI.listar(),
         usuariosAPI.listar(),
       ])
-      setProdutos(p)
-      setFornecedores(f)
-      setClientes(c)
-      setUsuarios(u)
+      setProdutos(p); setFornecedores(f); setClientes(c); setUsuarios(u)
       setBackendOk(true)
     } catch {
       setBackendOk(false)
@@ -127,22 +123,17 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
     }
   }
 
-  // ── Recarrega só a aba ativa após criar/editar/excluir ──
   async function carregarAba(tab = activeTab) {
     try {
       const dados = await apis[tab].listar()
       setters[tab](dados)
-    } catch {
-      showToast('Erro ao atualizar dados', 'erro')
-    }
+    } catch { showToast('Erro ao atualizar dados', 'erro') }
   }
 
-  // Carrega tudo quando a página abre
   useEffect(() => { carregarTudo() }, [])
 
   function showToast(msg, tipo = 'sucesso') { setToast({ msg, tipo }) }
 
-  /* filtros */
   const fP = useMemo(() => produtos.filter(p     => [p.nome, p.codigoBarras, p.categoria, p.fornecedor].some(v => v?.toLowerCase().includes(searchTerm.toLowerCase()))), [produtos, searchTerm])
   const fF = useMemo(() => fornecedores.filter(f => [f.nome, f.cnpj, f.email].some(v => v?.toLowerCase().includes(searchTerm.toLowerCase()))),                            [fornecedores, searchTerm])
   const fC = useMemo(() => clientes.filter(c     => [c.nome, c.documento, c.email, c.telefone].some(v => v?.toLowerCase().includes(searchTerm.toLowerCase()))),            [clientes, searchTerm])
@@ -165,7 +156,7 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
         showToast(`${SINGULAR[activeTab].charAt(0).toUpperCase() + SINGULAR[activeTab].slice(1)} cadastrado com sucesso!`)
       }
       fecharModal()
-      carregarAba() // recarrega só a aba atual
+      carregarAba()
     } catch (err) {
       showToast(err.message || 'Erro ao salvar', 'erro')
     }
@@ -205,8 +196,15 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
       <main className={styles.main}>
 
         {!backendOk && (
-          <div style={{ background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.3)', borderRadius:10, padding:'12px 16px', marginBottom:16, fontSize:14, color:'#e74c3c', display:'flex', alignItems:'center', gap:10 }}>
-            ⚠️ Backend offline — rode <code style={{background:'rgba(0,0,0,0.1)',padding:'2px 6px',borderRadius:4}}>npm run dev</code> na pasta <code style={{background:'rgba(0,0,0,0.1)',padding:'2px 6px',borderRadius:4}}>stockEasy-backend</code>
+          <div style={{ background:'rgba(231,76,60,0.1)', border:'1px solid rgba(231,76,60,0.3)', borderRadius:10, padding:'12px 16px', marginBottom:16, fontSize:14, color:'#e74c3c' }}>
+            ⚠️ Backend offline — rode <code>npm run dev</code> na pasta <code>stockEasy-backend</code>
+          </div>
+        )}
+
+        {/* aviso para visualizador */}
+        {isVisualizador && (
+          <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:10, padding:'12px 16px', marginBottom:16, fontSize:14, color:'#b45309', display:'flex', alignItems:'center', gap:8 }}>
+            👁️ Você está no modo <strong>Visualizador</strong> — apenas leitura. Contate o administrador para fazer alterações.
           </div>
         )}
 
@@ -246,7 +244,12 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
             <input className={styles.searchInput} placeholder={SEARCH_PH[activeTab]} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             {searchTerm && <button className={styles.searchClear} onClick={() => setSearchTerm('')}>×</button>}
           </div>
-          <button className={styles.btnNew} onClick={abrirCriar}>+ Novo {SINGULAR[activeTab]}</button>
+          {/* botão novo — escondido para Visualizador */}
+          {!isVisualizador && (
+            <button className={styles.btnNew} onClick={abrirCriar}>
+              + Novo {SINGULAR[activeTab]}
+            </button>
+          )}
         </div>
 
         {/* tabela */}
@@ -256,17 +259,17 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
               icone={TABS.find(t=>t.key===activeTab)?.icon}
               titulo={`Nenhum ${SINGULAR[activeTab]} encontrado`}
               descricao={searchTerm ? 'Tente buscar por outro termo.' : `Cadastre seu primeiro ${SINGULAR[activeTab]}.`}
-              labelBotao={searchTerm ? null : `+ Novo ${SINGULAR[activeTab]}`}
+              labelBotao={!isVisualizador && !searchTerm ? `+ Novo ${SINGULAR[activeTab]}` : null}
               onBotao={abrirCriar}
             />
           ) : (
             <table className={styles.table}>
               <thead>
                 <tr>
-                  {activeTab==='produtos'     && ['Produto','Cód. Barras','Categoria','Fornecedor','Custo','Margem','Venda','Estoque','Ações'].map(h=><th key={h}>{h}</th>)}
-                  {activeTab==='fornecedores' && ['Nome / Razão Social','CNPJ','Telefone','E-mail','Prazo','Ações'].map(h=><th key={h}>{h}</th>)}
-                  {activeTab==='clientes'     && ['Nome','CPF/CNPJ','Telefone','E-mail','Compras','Ações'].map(h=><th key={h}>{h}</th>)}
-                  {activeTab==='usuarios'     && ['Usuário','Cargo','Permissão','Status','Ações'].map(h=><th key={h}>{h}</th>)}
+                  {activeTab==='produtos'     && ['Produto','Cód. Barras','Categoria','Fornecedor','Custo','Margem','Venda','Estoque', !isVisualizador && 'Ações'].filter(Boolean).map(h=><th key={h}>{h}</th>)}
+                  {activeTab==='fornecedores' && ['Nome / Razão Social','CNPJ','Telefone','E-mail','Prazo', !isVisualizador && 'Ações'].filter(Boolean).map(h=><th key={h}>{h}</th>)}
+                  {activeTab==='clientes'     && ['Nome','CPF/CNPJ','Telefone','E-mail','Compras', !isVisualizador && 'Ações'].filter(Boolean).map(h=><th key={h}>{h}</th>)}
+                  {activeTab==='usuarios'     && ['Usuário','Cargo','Permissão','Status', !isVisualizador && 'Ações'].filter(Boolean).map(h=><th key={h}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -282,7 +285,9 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
                       <td>{item.margem}%</td>
                       <td className={styles.bold}>{fmt(item.venda)}</td>
                       <td><span className={low?styles.stockLow:styles.stockOk}>{item.estoque}</span>{low&&<span className={styles.pillRed}>Baixo</span>}</td>
-                      <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar" onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                      {!isVisualizador && (
+                        <td><div className={styles.actionBtns}><button className={styles.btnEdit} onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                      )}
                     </tr>
                   )
                 })}
@@ -293,7 +298,9 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
                     <td>{item.telefone}</td>
                     <td>{item.email}</td>
                     <td><span className={styles.pillGreen}>{item.prazoEntrega} dias</span></td>
-                    <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar" onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                    {!isVisualizador && (
+                      <td><div className={styles.actionBtns}><button className={styles.btnEdit} onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                    )}
                   </tr>
                 ))}
                 {activeTab==='clientes' && currentItems.map(item => (
@@ -303,7 +310,9 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
                     <td>{item.telefone}</td>
                     <td>{item.email}</td>
                     <td><span className={styles.pillGreen}>{item.totalCompras} compras</span></td>
-                    <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar" onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                    {!isVisualizador && (
+                      <td><div className={styles.actionBtns}><button className={styles.btnEdit} onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                    )}
                   </tr>
                 ))}
                 {activeTab==='usuarios' && currentItems.map(item => (
@@ -312,7 +321,10 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
                     <td>{item.cargo}</td>
                     <td><span className={item.permissao==='Administrador'?styles.pillGreen:item.permissao==='Operador'?styles.pillAmber:styles.pillGray}>{item.permissao}</span></td>
                     <td><span className={item.status==='Ativo'?styles.pillGreen:styles.pillRed}>{item.status}</span></td>
-                    <td><div className={styles.actionBtns}><button className={styles.btnEdit} data-tooltip="Editar" onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} data-tooltip="Excluir" onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                    {/* usuários — só Admin vê os botões */}
+                    {isAdmin && (
+                      <td><div className={styles.actionBtns}><button className={styles.btnEdit} onClick={()=>abrirEditar(item)}>✏️</button><button className={styles.btnDelete} onClick={()=>askDelete(item._id,item.nome)}>🗑️</button></div></td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -327,12 +339,14 @@ export default function Cadastro({ user, onLogout, sidebarAberta, onToggleSideba
         )}
       </main>
 
-      <Modal isOpen={modalOpen} onClose={fecharModal} title={modalTitle}>
-        {activeTab==='produtos'     && <ProdutoForm     fornecedores={fornecedores} initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
-        {activeTab==='fornecedores' && <FornecedorForm                             initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
-        {activeTab==='clientes'     && <ClienteForm                                initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
-        {activeTab==='usuarios'     && <UsuarioForm                                initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
-      </Modal>
+      {!isVisualizador && (
+        <Modal isOpen={modalOpen} onClose={fecharModal} title={modalTitle}>
+          {activeTab==='produtos'     && <ProdutoForm     fornecedores={fornecedores} initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
+          {activeTab==='fornecedores' && <FornecedorForm                             initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
+          {activeTab==='clientes'     && <ClienteForm                                initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
+          {activeTab==='usuarios'     && <UsuarioForm                                initialData={editItem} onSave={handleSave} onCancel={fecharModal} />}
+        </Modal>
+      )}
 
       <ConfirmDialog msg={confirmMsg} onConfirm={confirmDelete} onCancel={()=>{setConfirmMsg('');setPendingDel(null)}} />
       <Toast msg={toast.msg} tipo={toast.tipo} onDone={() => setToast({ msg:'', tipo:'sucesso' })} />

@@ -6,8 +6,7 @@ const sections = [
   {
     title: 'PRINCIPAL',
     items: [
-      { key: 'dashboard',      label: 'Dashboard',      icon: '🏠', path: '/dashboard'      },
-      { key: 'relatorios',     label: 'Relatórios',     icon: '📊', path: '/relatorios'     },
+      { key: 'dashboard', label: 'Dashboard', icon: '🏠', path: '/dashboard' },
     ],
   },
   {
@@ -22,7 +21,7 @@ const sections = [
   {
     title: 'SUPORTE',
     items: [
-      { key: 'ajuda',          label: 'Ajuda',          icon: '❓', path: '/ajuda'          },
+      { key: 'ajuda', label: 'Ajuda', icon: '❓', path: '/ajuda' },
     ],
   },
 ]
@@ -40,16 +39,13 @@ export default function Sidebar({ aberta, onFechar, onLogout }) {
     <>
       <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''} ${aberta ? styles.expanded : ''}`}>
 
-        {/* Botão de colapso melhorado */}
         <button
           className={styles.collapseBtn}
           onClick={() => setCollapsed(v => !v)}
           title={collapsed ? 'Expandir menu' : 'Recolher menu'}
         >
           <div className={styles.collapseBtnInner}>
-            <span className={`${styles.collapseArrow} ${collapsed ? styles.collapseArrowRight : ''}`}>
-              ‹
-            </span>
+            <span className={`${styles.collapseArrow} ${collapsed ? styles.collapseArrowRight : ''}`}>‹</span>
             {!collapsed && <span className={styles.collapseBtnText}>Recolher</span>}
           </div>
         </button>
@@ -57,21 +53,17 @@ export default function Sidebar({ aberta, onFechar, onLogout }) {
         <nav className={styles.menu}>
           {sections.map(section => (
             <div key={section.title} className={styles.section}>
-              {!collapsed && (
-                <div className={styles.sectionTitle}>{section.title}</div>
-              )}
+              {!collapsed && <div className={styles.sectionTitle}>{section.title}</div>}
               {section.items.map(item => (
                 <NavLink
                   key={item.key}
                   to={item.path}
                   onClick={onFechar}
-                  className={({ isActive }) =>
-                    `${styles.link} ${isActive ? styles.active : ''}`
-                  }
+                  className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
                 >
                   <span className={styles.linkIcon}>{item.icon}</span>
                   {!collapsed && <span className={styles.linkLabel}>{item.label}</span>}
-                  {collapsed && <span className={styles.tooltip}>{item.label}</span>}
+                  {collapsed  && <span className={styles.tooltip}>{item.label}</span>}
                 </NavLink>
               ))}
             </div>
@@ -81,7 +73,7 @@ export default function Sidebar({ aberta, onFechar, onLogout }) {
         <button type="button" className={styles.logout} onClick={handleLogout}>
           <span className={styles.linkIcon}>🚪</span>
           {!collapsed && <span className={styles.linkLabel}>Sair</span>}
-          {collapsed && <span className={styles.tooltip}>Sair</span>}
+          {collapsed  && <span className={styles.tooltip}>Sair</span>}
         </button>
 
       </aside>
