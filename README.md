@@ -298,8 +298,3 @@ npm run dev
 | Fonte títulos | **Syne 800** | **Syne 800** |
 | Fonte corpo | **DM Sans** | **DM Sans** |
 
-
-
-<div align="center">
-  Feito com 💚 por Pedro Paulo e Maria Eduarda — Campina Grande, PB
-</div>
