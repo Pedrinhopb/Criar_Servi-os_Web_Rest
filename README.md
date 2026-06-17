@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 📦 StockEasy — Sistema de Controle de Estoque
 
 > Plataforma SaaS moderna para gestão de estoque de pequenas e médias empresas.
@@ -26,29 +25,11 @@
 O **StockEasy** é uma aplicação web full stack desenvolvida para facilitar o controle de estoque de empresas de pequeno e médio porte. O sistema segue o modelo **SaaS (Software as a Service)** com foco em usabilidade, organização e experiência do usuário.
 
 A plataforma conta com **frontend em React** integrado a um **backend Node.js + Express + MongoDB Atlas**, com autenticação segura via **JWT** e senhas criptografadas com **BCrypt**, além de controle de acesso por perfil de usuário.
-=======
-# 📦 StockEasy – Sistema de Controle de Estoque
-
-## 👨‍💻 Integrantes do Projeto
-- Pedro Paulo de Vasconcelos  
-- Maria Eduarda Eloi  
-
----
-
-## 💡 Descrição do Sistema
-
-O **StockEasy** é um sistema web desenvolvido para facilitar o controle de estoque de empresas de pequeno e médio porte.
-
-A aplicação permite gerenciar produtos, clientes e relatórios de forma simples, moderna e eficiente, oferecendo uma interface intuitiva e responsiva.
-
-O sistema segue o modelo **SaaS (Software as a Service)**, com foco em usabilidade, organização e experiência do usuário.
->>>>>>> bc3cef289ac649582f72ebd50294a2ae8a229217
 
 ---
 
 ## 🚀 Tecnologias Utilizadas
 
-<<<<<<< HEAD
 ### Frontend
 | Tecnologia | Uso |
 |---|---|
@@ -92,26 +73,77 @@ O sistema segue o modelo **SaaS (Software as a Service)**, com foco em usabilida
 |---|---|---|---|
 | Administrador | admin@hotmail.com | admin123 | Acesso total |
 | Visualizador  | vis@hotmail.com   | 123456   | Apenas leitura |
-=======
-- React.js  
-- Vite  
-- JavaScript (ES6+)  
-- CSS3  
-- React Router DOM  
-- Framer Motion (animações)  
-- LocalStorage (simulação de autenticação)  
->>>>>>> bc3cef289ac649582f72ebd50294a2ae8a229217
+
+---
+
+## 📁 Estrutura do Projeto
+
+O projeto é composto por **duas pastas independentes** — cada uma deve ser executada separadamente em terminais diferentes:
+
+```
+StockEasy/
+├── Criar_Servi-os_Web_Rest/   ← Frontend React (porta 5173)
+└── stockEasy-backend/          ← Backend Node.js (porta 3000)
+```
+
+---
+
+## ⚙️ Como Rodar o Projeto
+
+> ⚠️ **Importante:** O projeto possui duas partes independentes. É necessário rodar o **backend** e o **frontend** em terminais separados ao mesmo tempo.
+
+---
+
+### 1️⃣ Backend
+
+Abra um terminal e execute:
+
+```bash
+cd stockEasy-backend
+npm install
+```
+
+Crie o arquivo `.env` a partir do `.env.example`:
+
+```
+PORT=3000
+MONGO_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/stockeasy
+JWT_SECRET=sua_chave_secreta_longa_aqui
+```
+
+Inicie o servidor:
+
+```bash
+npm run dev
+```
+
+✅ Servidor rodando em `http://localhost:3000`
+
+---
+
+### 2️⃣ Frontend
+
+Abra **outro terminal** e execute:
+
+```bash
+cd Criar_Servi-os_Web_Rest
+npm install
+npm run dev
+```
+
+✅ Aplicação rodando em `http://localhost:5173`
+
+---
+
+> 💡 **Os dois precisam estar rodando ao mesmo tempo para o sistema funcionar!**
 
 ---
 
 ## 🖥️ Telas Desenvolvidas
 
-<<<<<<< HEAD
 ### 🏠 Landing Page
 - Hero com preview do dashboard animado
-- Seção de serviços com números impactantes
-- Avaliações com rating médio calculado
-- FAQ com acordeão animado
+- Seção de serviços, avaliações e FAQ
 - Formulário de contato e Footer completo
 - Toggle de tema claro/escuro
 
@@ -122,118 +154,28 @@ O sistema segue o modelo **SaaS (Software as a Service)**, com foco em usabilida
 
 ### 📊 Dashboard
 - Saudação personalizada com nome do usuário
-- Alertas de estoque em tempo real (produtos críticos e baixo)
-- Resumo financeiro (valor estoque, receita, custos, lucro)
-- Últimos 5 produtos cadastrados
-- Resumo de cadastros (fornecedores, clientes, usuários, custos)
+- Alertas de estoque em tempo real
+- Resumo financeiro e últimos produtos cadastrados
 
 ### 📋 Cadastro
 - **4 abas:** Produtos · Fornecedores · Clientes · Usuários
 - CRUD completo integrado com MongoDB Atlas
-- Validação de campos únicos (email, CNPJ, CPF, código de barras)
-- Modal de criar e editar para cada entidade
-- Confirmação antes de excluir e toast de feedback
+- Validação de campos únicos
 - Botões de ação ocultos para Visualizador
 
 ### 📦 Estoque
-- Cards de resumo clicáveis (Total, Crítico, Baixo, Ok)
+- Cards de resumo clicáveis por status
 - Filtros por busca e categoria
-- Tabela colorida por status de estoque
 - Movimentação (Entrada e Saída) com preview visual
-- Histórico de movimentações da sessão
-- Valor total em estoque por produto
 
 ### 💼 Administrativo
-- CRUD de custos fixos mensais (salvo no MongoDB Atlas)
-- Volume médio de vendas e margem de lucro (salvos no Atlas)
-- Distribuição de custos por categoria
+- CRUD de custos fixos mensais salvo no Atlas
 - Precificação sugerida com preço mínimo por produto
 
 ### 💰 Financeiro
-- Valor total em estoque
-- Receita estimada e lucro bruto/líquido
+- Valor total em estoque, receita e lucro estimados
 - Alerta de produtos com preço abaixo do mínimo
-- Estoque por categoria com valor e percentual
 - Resumo de custos fixos
-
-### 🌙 Dark / Light Mode
-- Suporte completo em todas as telas
-- Toggle no dropdown do perfil no header
-
----
-
-## 📁 Estrutura do Projeto
-
-```
-stockeasy/
-├── Criar_Servi-os_Web_Rest/          ← Frontend React
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── landing/              ← Navbar, Hero, Services, Reviews, FAQ, Contact, Footer
-│   │   │   ├── dashboard/            ← Header, Sidebar, EmptyState
-│   │   │   └── cadastro/             ← ProdutoForm, FornecedorForm, ClienteForm, UsuarioForm
-│   │   ├── context/
-│   │   │   └── ThemeContext.jsx
-│   │   ├── pages/
-│   │   │   ├── LandingPage.jsx
-│   │   │   ├── LoginPage.jsx
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── Cadastro.jsx
-│   │   │   ├── Estoque.jsx
-│   │   │   ├── Administrativo.jsx
-│   │   │   ├── Financeiro.jsx
-│   │   │   └── WorkInProgress.jsx
-│   │   ├── services/
-│   │   │   └── api.js
-│   │   ├── styles/
-│   │   │   ├── Dashboard.module.css
-│   │   │   ├── Cadastro.module.css
-│   │   │   ├── Estoque.module.css
-│   │   │   ├── Administrativo.module.css
-│   │   │   ├── Financeiro.module.css
-│   │   │   └── Auth.module.css
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
-│   ├── .env.example
-│   ├── .gitignore
-│   └── package.json
-│
-└── stockEasy-backend/                ← Backend Node.js
-    ├── src/
-    │   ├── config/
-    │   │   └── db.js
-    │   ├── models/
-    │   │   ├── Usuario.js
-    │   │   ├── Produto.js
-    │   │   ├── Fornecedor.js
-    │   │   ├── Cliente.js
-    │   │   ├── CustoFixo.js
-    │   │   └── Configuracao.js
-    │   ├── controllers/
-    │   │   ├── authController.js
-    │   │   ├── usuarioController.js
-    │   │   ├── produtoController.js
-    │   │   ├── fornecedorController.js
-    │   │   ├── clienteController.js
-    │   │   ├── custoFixoController.js
-    │   │   └── configuracaoController.js
-    │   ├── routes/
-    │   │   ├── auth.js
-    │   │   ├── usuarios.js
-    │   │   ├── produtos.js
-    │   │   ├── fornecedores.js
-    │   │   ├── clientes.js
-    │   │   ├── custos.js
-    │   │   └── configuracoes.js
-    │   ├── middlewares/
-    │   │   ├── authMiddleware.js
-    │   │   └── logMiddleware.js
-    │   └── index.js
-    ├── .env.example
-    ├── .gitignore
-    └── package.json
-```
 
 ---
 
@@ -270,7 +212,6 @@ stockeasy/
 | cnpj | String (único) | CNPJ |
 | telefone | String | Telefone |
 | email | String | E-mail |
-| endereco | String | Endereço completo |
 | cidade | String | Cidade |
 | estado | String | Estado |
 | prazoEntrega | Number | Prazo em dias |
@@ -283,7 +224,6 @@ stockeasy/
 | documento | String (único) | CPF ou CNPJ |
 | telefone | String | Telefone |
 | email | String | E-mail |
-| endereco | String | Endereço |
 | cidade | String | Cidade |
 | estado | String | Estado |
 | totalCompras | Number | Contador de compras |
@@ -330,112 +270,6 @@ stockeasy/
 | POST/PUT/DELETE | `/api/custos/:id` | ✅ | ✅ | ❌ |
 | GET | `/api/configuracoes` | ✅ | ✅ | ✅ |
 | PUT | `/api/configuracoes` | ✅ | ✅ | ❌ |
-=======
-### 🔹 Home (Landing Page)
-- Apresentação do sistema  
-- Hero com chamada principal  
-- Seção de produto  
-- Funcionalidades (features)  
-- Avaliações de usuários  
-- Planos (pricing)  
-- Formulário de contato  
-- CTA (call to action)  
-
----
-
-### 🔹 Login
-- Formulário de autenticação  
-- Redirecionamento para área interna  
-- Link para cadastro  
-
----
-
-### 🔹 Cadastro
-- Registro de novos usuários  
-- Integração com login  
-
----
-
-### 🔹 Dashboard (Em desenvolvimento)
-- Área interna do sistema  
-- Acesso após login  
-
----
-
-### 🔹 Outras telas (em construção)
-- Estoque  
-- Relatórios  
-- Administrativo  
-- Financeiro  
-- Ajuda  
-
----
-
-## 📁 Organização do Projeto
-
-
-src/
-├── components/
-│ ├── Navbar/
-│ ├── Hero/
-│ ├── Product/
-│ ├── Features/
-│ ├── Testimonials/
-│ ├── Pricing/
-│ ├── Contact/
-│ ├── CTA/
-│ └── Footer/
-│
-├── pages/
-│ ├── Home.jsx
-│ ├── LoginPage.jsx
-│ ├── RegisterPage.jsx
-│ └── Cadastro/
-│
-├── styles/
-│ └── home.css
-│
-├── App.jsx
-└── main.jsx
-
->>>>>>> bc3cef289ac649582f72ebd50294a2ae8a229217
-
----
-
-## ⚙️ Como Rodar o Projeto
-
-<<<<<<< HEAD
-### Pré-requisitos
-- Node.js 16 ou superior
-- Conta no [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (gratuito)
-
-### Backend
-
-```bash
-cd stockEasy-backend
-npm install
-```
-
-Configure o `.env` a partir do `.env.example`:
-```
-PORT=3000
-MONGO_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/stockeasy
-JWT_SECRET=sua_chave_secreta_longa_aqui
-```
-
-```bash
-npm run dev
-# Servidor rodando em http://localhost:3000
-```
-
-### Frontend
-
-```bash
-cd Criar_Servi-os_Web_Rest
-npm install
-npm run dev
-# Acesse http://localhost:5173
-```
 
 ---
 
@@ -464,79 +298,8 @@ npm run dev
 | Fonte títulos | **Syne 800** | **Syne 800** |
 | Fonte corpo | **DM Sans** | **DM Sans** |
 
----
-
-## 📌 Próximos Passos
-
-- [ ] Dashboard com gráficos visuais
-- [ ] Upload de foto de produtos
-- [ ] Página de Ajuda
-- [ ] Deploy em produção
 
 
-
-
-=======
-### 1. Clone o repositório
-
-
-git clone https://github.com/Pedrinhopb/Criar_Servi-os_Web_Rest.git
-
-
----
-
-### 2. Acesse a pasta do projeto
-
-
-cd stockeasy
-
-
----
-
-### 3. Instale as dependências
-
-
-npm install
-
-
----
-
-### 4. Execute o projeto
-
-
-npm run dev
-
-
----
-
-### 5. Acesse no navegador
-
-
-http://localhost:5173
-
-
-*(ou a porta exibida no terminal)*
-
----
-
-## 📌 Status do Projeto
-
-🚧 Em desenvolvimento  
-✔ Interface moderna implementada  
-✔ Navegação funcional  
-✔ Autenticação simulada  
-⏳ Funcionalidades completas em construção  
-
----
-
-## 📞 Contato
-
-📧 contato@stockeasy.com  
-📍 Campina Grande - PB  
-
----
-
-## 🎓 Objetivo Acadêmico
-
-Este projeto foi desenvolvido com fins acadêmicos, com o objetivo de aplicar conceitos de desenvolvimento web moderno, 
->>>>>>> bc3cef289ac649582f72ebd50294a2ae8a229217
+<div align="center">
+  Feito com 💚 por Pedro Paulo e Maria Eduarda — Campina Grande, PB
+</div>
